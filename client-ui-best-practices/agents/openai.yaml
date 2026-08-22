@@ -1,0 +1,4 @@
+interface:
+  display_name: "클라이언트 UI 베스트 프랙티스"
+  short_description: "React·Flutter 상태와 UI 구조를 맥락에 맞게 설계·리뷰합니다"
+  default_prompt: "$client-ui-best-practices를 사용해 현재 저장소의 상태 소유권과 컴포넌트 구조를 분석하고 필요한 개선을 적용해 주세요."

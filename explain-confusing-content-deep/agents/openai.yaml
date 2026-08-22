@@ -1,0 +1,4 @@
+interface:
+  display_name: "Explain Confusing Content Deep"
+  short_description: "어려운 글과 밈, 캡처를 깊이 있게 4단계로 풀어줍니다"
+  default_prompt: "Use $explain-confusing-content-deep to deeply explain this confusing post, link, screenshot, meme, or jargon-heavy content in Korean."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Java Backend Code Style"
+  short_description: "Project-aware Java backend coding rules"
+  default_prompt: "Use $java-backend-code-style to apply the project's established conventions to the requested Java backend implementation or review while preserving observable behavior."

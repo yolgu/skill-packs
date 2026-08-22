@@ -1,0 +1,4 @@
+interface:
+  display_name: "Explain Confusing Content"
+  short_description: "어려운 글과 밈, 캡처를 핵심 맥락부터 두 단계로 풀어줍니다"
+  default_prompt: "Use $explain-confusing-content to explain this confusing post, link, screenshot, meme, or jargon-heavy content in two clear stages in Korean."

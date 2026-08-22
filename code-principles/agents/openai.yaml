@@ -1,0 +1,4 @@
+interface:
+  display_name: "Universal Code Principles"
+  short_description: "Language-agnostic principles for reliable code"
+  default_prompt: "Use $code-principles to write, change, refactor, or review code with project-aware, language-agnostic quality principles."

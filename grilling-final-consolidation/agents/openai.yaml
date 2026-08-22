@@ -1,0 +1,7 @@
+interface:
+  display_name: "Grilling Final Consolidation"
+  short_description: "Consolidate a completed grilling session in full"
+  default_prompt: "Use $grilling-final-consolidation to consolidate this completed grilling session without omissions and save the result as a Markdown file."
+
+policy:
+  allow_implicit_invocation: false

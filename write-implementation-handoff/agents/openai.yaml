@@ -1,0 +1,7 @@
+interface:
+  display_name: "구현 인계 문서 작성"
+  short_description: "완료된 구현을 사람용 인계 문서 세 파일로 정리합니다"
+  default_prompt: "$write-implementation-handoff를 사용해 방금 끝낸 구현을 사람용 인계 문서로 작성해 주세요."
+
+policy:
+  allow_implicit_invocation: false

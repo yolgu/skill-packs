@@ -1,0 +1,7 @@
+interface:
+  display_name: "Subagent Delegation Guard"
+  short_description: "Strict lifecycle rules for Codex subagent delegation"
+  default_prompt: "Use $subagent-delegation-guard to decide whether and how to delegate work safely."
+
+policy:
+  allow_implicit_invocation: true
