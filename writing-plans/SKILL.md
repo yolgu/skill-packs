@@ -140,11 +140,71 @@ description: Use only when Codex will actually implement a code or configuration
 
 ---
 
-## 3. Plan Item Contract
+## 3. Plan Bundle Contract
 
-각 작업 항목은 반드시 아래 계약을 따른다.
+계획은 채팅 본문 하나로만 출력하지 않고, 하나의 master plan과 P-item별 독립 파일로 저장한다.
 
-## [P{number}] {Task Name} - Status: {Pending|In Progress|Blocked|Done}
+### Save location
+
+저장 위치는 다음 우선순위로 정한다.
+
+1. 사용자가 지정한 위치
+2. 저장소에 이미 존재하는 호환 가능한 plan 문서 규칙
+3. 기본값: `docs/plans/YYYY-MM-DD-<topic>/`
+
+기본 구조:
+
+```text
+docs/plans/YYYY-MM-DD-<topic>/
+|-- plan.md
+`-- items/
+    |-- P0.md
+    |-- P1.md
+    `-- ...
+```
+
+규칙:
+
+- `<topic>`은 짧은 lowercase kebab-case로 작성한다.
+- `P0`, `P1`, ... 식별자는 실행 순서가 아니라 안정적인 작업 ID다. 순서는 dependency로 표현한다.
+- 파일명은 제목이 바뀌어도 링크가 깨지지 않도록 `P{number}.md`로 고정한다.
+- 각 `items/P{number}.md`에는 정확히 하나의 P-item만 둔다.
+- P-item을 추가하거나 제거할 때 기존 ID를 불필요하게 재번호화하지 않는다.
+
+### Source of truth and references
+
+- `plan.md`는 전체 계획의 진입점이며 Strategic Plan, Architecture / System Plan, milestone index, 전체 dependency diagram, regression matrix, side-effect review, 공통 verification, handoff를 소유한다.
+- `items/P{number}.md`는 해당 작업의 상세 내용과 status, dependencies, files/resources, risk, rollback, completion criteria, TDD / validation steps의 Single Source of Truth다.
+- `plan.md`의 milestone index는 모든 P-item을 상대 링크로 참조해야 한다. P-item 본문 전체를 `plan.md`에 복제하지 않는다.
+- 각 P-item은 상단에서 `../plan.md`를 parent plan으로 참조하고, dependency가 있으면 같은 디렉토리의 해당 P-item 파일을 상대 링크로 참조한다.
+- master의 dependency diagram과 regression matrix처럼 전체 조망을 위해 필요한 파생 정보는 허용하되, P-item 변경 시 같은 작업에서 동기화한다.
+- 절대 경로, `file://` URI, 채팅 전용 참조를 문서 간 링크에 사용하지 않는다.
+- 최종 응답에는 `plan.md` 링크와 생성된 P-item 개수만 간결하게 제시하고, 파일 본문 전체를 다시 붙여 넣지 않는다.
+
+### Bundle creation order
+
+1. 전체 범위를 인벤토리화하고 P-item 경계를 정한다.
+2. 안정적인 P-ID와 dependency를 확정한다.
+3. 각 `items/P{number}.md`를 작성한다.
+4. 모든 P-item을 참조하는 `plan.md`를 작성한다.
+5. 링크, ID, dependency, 누락 여부를 검증한다.
+
+---
+
+## 4. Plan Item Contract
+
+각 작업 항목은 반드시 독립된 `items/P{number}.md` 파일에서 아래 계약을 따른다.
+
+```markdown
+# [P{number}] {Task Name}
+
+Parent plan:
+
+- [전체 계획](../plan.md)
+
+Status:
+
+- {Pending|In Progress|Blocked|Done}
 
 Purpose:
 
@@ -156,7 +216,7 @@ Goal linkage:
 
 Dependencies:
 
-- depends_on: [P0, P1, ...]
+- depends_on: [] 또는 [[P0](P0.md), [P1](P1.md), ...]
 - parallelizable: true/false
 
 Required skills:
@@ -211,10 +271,11 @@ TDD / Validation steps:
 Notes:
 
 - 중요한 판단, 제한, 주의사항.
+```
 
 ---
 
-## 4. Anti-Vagueness Rules
+## 5. Anti-Vagueness Rules
 
 다음 표현은 금지하거나 즉시 구체화하라.
 
@@ -239,7 +300,7 @@ Notes:
 
 ---
 
-## 5. Missing-Work Prevention
+## 6. Missing-Work Prevention
 
 긴 작업이나 대용량 문서, 여러 모듈이 있는 작업은 반드시 누락 방지 전략을 포함한다.
 
@@ -248,14 +309,14 @@ Notes:
 - 전체 범위 인벤토리 방식
 - 청크 또는 모듈 분할 기준
 - 각 청크/모듈의 순서 번호
-- 처리 완료 여부 추적 방식
+- `plan.md`의 P-item 링크를 통해 각 파일의 처리 상태를 추적하는 방식
 - 실패한 청크만 재시도하는 방법
 - 최종 병합 방식
 - 누락 검증 체크리스트
 
 ---
 
-## 6. Context Ledger Requirement
+## 7. Context Ledger Requirement
 
 장기 실행, 에이전트, 자동화, 플러그인, 다단계 구현 계획에는 반드시 관찰 가능한 상태 저장소를 설계한다.
 
@@ -277,7 +338,7 @@ Notes:
 
 ---
 
-## 7. Progressive Context / Skill Loading
+## 8. Progressive Context / Skill Loading
 
 사용 가능한 문맥이 많을 때는 전부 읽지 말고 점진적으로 로드한다.
 
@@ -297,10 +358,15 @@ Notes:
 
 ---
 
-## 8. Output Format
+## 9. Output Format
 
-최종 출력은 반드시 아래 구조를 따른다.
+최종 산출물은 반드시 `plan.md`와 P-item 파일들로 나눈다.
 
+### Master file: `plan.md`
+
+`plan.md`는 아래 구조를 따른다.
+
+```markdown
 # {Plan Title}
 
 ## 1. Executive Summary
@@ -344,9 +410,14 @@ Notes:
 - Storage/artifacts:
 - Security/privacy:
 
-## 6. Milestone Plan
+## 6. Milestone Index
 
-위의 “Plan Item Contract” 형식으로 P0부터 작성한다.
+| Item | Purpose | Depends on | Parallelizable |
+| ---- | ------- | ---------- | -------------- |
+| [P0 - {Task Name}](items/P0.md) | ... | - | true/false |
+| [P1 - {Task Name}](items/P1.md) | ... | [P0](items/P0.md) | true/false |
+
+모든 P-item을 빠짐없이 나열하되 상세 계약은 각 링크의 파일에만 작성한다.
 
 ## 7. Dependency Diagram
 
@@ -386,7 +457,11 @@ P2, P3 -> P4
 아래 항목을 점검하고 부족한 부분을 보강한 뒤 최종 답변한다.
 
 - [ ] 모든 Success Criteria가 검증 방법을 가진다.
-- [ ] 모든 P-item이 dependency, risk, rollback, validation을 가진다.
+- [ ] 모든 P-item이 독립된 `items/P{number}.md` 파일 하나에만 존재한다.
+- [ ] `plan.md`가 모든 P-item을 상대 링크로 참조하고 P-item 본문을 중복하지 않는다.
+- [ ] 모든 P-item이 parent plan, dependency, risk, rollback, validation을 가진다.
+- [ ] 모든 P-ID가 유일하고 모든 dependency 링크가 실제 파일로 해석된다.
+- [ ] orphan P-item과 끊어진 링크가 없다.
 - [ ] 모든 중요한 제약이 Scope Guard에 반영되었다.
 - [ ] 누락 방지 전략이 있다.
 - [ ] 회귀 매트릭스가 있다.
@@ -394,6 +469,14 @@ P2, P3 -> P4
 - [ ] hidden reasoning을 노출하지 않는다.
 - [ ] 불확실성은 Assumption/Open Question으로 분리했다.
 - [ ] 바로 다음 작업자가 실행 가능한 수준이다.
+```
+
+### P-item files: `items/P{number}.md`
+
+- P0부터 각 작업을 위의 “Plan Item Contract” 형식으로 별도 파일에 작성한다.
+- master에 없는 P-item 파일이나 파일이 없는 milestone 항목을 만들지 않는다.
+- 공통 설명을 반복하지 말고 필요한 master section으로 링크한다.
+- 작업 실행자는 `plan.md`를 먼저 읽은 뒤 실행할 P-item 파일을 읽는다고 가정한다.
 
 ---
 
