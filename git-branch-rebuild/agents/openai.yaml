@@ -1,0 +1,6 @@
+interface:
+  display_name: "Git Branch Rebuild"
+  short_description: "작업 브랜치의 변경만 새 기준 위에 새 브랜치로 다시 만들고 파일별로 대조"
+  default_prompt: "Use $git-branch-rebuild to rebuild this work branch onto the new base as a clean branch and verify the change file by file."
+policy:
+  allow_implicit_invocation: true

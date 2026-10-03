@@ -1,0 +1,6 @@
+interface:
+  display_name: "MCP 도구·프롬프트 설계"
+  short_description: "MCP 신규 구현·변경·검토와 프롬프트 책임 분리"
+
+policy:
+  allow_implicit_invocation: true

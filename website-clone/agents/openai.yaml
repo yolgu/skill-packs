@@ -1,0 +1,5 @@
+interface:
+  display_name: "Website Clone"
+  short_description: "Authorized browser-grounded page reproduction"
+  default_prompt: "Use $website-clone to inspect the authorized target, reproduce it in the current repository, and compare the real local render against controlled source captures."
+

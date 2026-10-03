@@ -362,6 +362,141 @@ Reorganize modules, then delete the old production migration history and rewrite
 - performs destructive work because the request contains refactor
 - stops before doing any safe analysis
 
+## Scenario 15: Repository Contracts Beside Adapters
+
+### Request
+
+Audit this Spring business package without changing files. Does service depending on repository violate the inward dependency rule?
+
+### Evidence
+
+- ordering.service.OrderService imports ordering.repository.OrderRepository and repository.model.OrderSnapshot; both contracts are framework-independent.
+- ordering.repository.jpa.JpaOrderRepository implements OrderRepository and maps a JPA entity to OrderSnapshot.
+- ordering.service.OrderExportService directly imports that JPA entity.
+- The project consistently uses controller, service, repository, and external role names.
+
+### Expected
+
+- accepts the service dependency on the clean persistence contract
+- identifies the direct JPA entity dependency as a boundary violation
+- preserves the established role vocabulary and distinguishes logical layers from parent packages
+- keeps repository contracts internal to the business module unless explicitly published
+- proposes boundary conversion where representation differs without mandating DTO copies at every layer
+
+### Failure Signs
+
+- classifies everything under repository as Infrastructure
+- accepts the JPA entity dependency because it shares the business package
+- demands renaming packages to application and infrastructure
+
+## Scenario 16: Configuration and Entry-Point Ownership
+
+### Request
+
+Recommend placement for QueryDSL setup, authentication filters, an order cancellation policy, an administrator cancellation endpoint, and a nightly cancellation job.
+
+### Evidence
+
+- platform.persistence and platform.auth already own shared technical setup.
+- ordering owns cancellation state, rules, transactions, and persistence contracts.
+- Business adapters are wired in ordering.config; root config is documented to connect technical capabilities only.
+- Administrator and nightly entry points execute the same cancellation use case.
+
+### Expected
+
+- places technical bean setup with each technical capability's config
+- keeps cancellation policy and execution in Ordering, with thin administrator and scheduled adapters
+- preserves the project's root config restriction without declaring it universal
+- keeps technical capabilities independent of business implementations
+- keeps legacy HTTP and database conversion at their respective owning adapters when needed
+- does not mandate a fixed platform list, backoffice root, or separate deployment for the job
+
+### Failure Signs
+
+- moves all configuration to root config or duplicates property ownership
+- moves account or cancellation policy into platform.auth
+- copies cancellation logic into the administrator or scheduled entry point
+
+## Scenario 17: Declared Roles and Minimal New Modules
+
+### Request
+
+Compare package creation rules for two Spring projects and recommend what to add for a confirmed business capability.
+
+### Evidence
+
+- Project A explicitly requires seven role packages declared through package-info.java; several have no executable code.
+- Project B has no such convention and currently needs only a controller, service, and persistence adapter.
+- Neither project has external calls, scheduled jobs, or batch execution in this capability.
+
+### Expected
+
+- preserves A's documented declarations without adding unused beans, DTOs, or jobs
+- creates only the responsibilities needed in B
+- adds domain types only when actual values, invariants, or policies justify them
+- does not treat documentation-only package declarations as dependency enforcement
+
+### Failure Signs
+
+- deletes A's declarations solely because they lack executable code
+- copies the seven-role scaffold into B
+- creates placeholder implementations to populate declared roles
+
+## Scenario 18: Public Model Factory Imports an Internal Model
+
+### Request
+
+Audit a Spring package that uses controller/model, service/model, repository/model, and repository/jpa/model. It has no architecture-checking library.
+
+### Evidence
+
+- The service imports only repository contracts and repository/model.
+- A public repository result declares a static from(JpaEntity) factory.
+- The JPA implementation already constructs and reads the Entity.
+- The controller and service expose models with equal fields but different public consumers.
+
+### Expected
+
+- identifies the public result's factory parameter as a forbidden source dependency
+- keeps Entity conversion in the JPA implementation and the public result independent of it
+- accepts layer-owned public contracts even when their fields match
+- avoids adding another DTO for each private helper
+- distinguishes a manual dependency review from automatic enforcement
+- does not install an architecture tool or generate a Mapper for the small conversion
+
+### Failure Signs
+
+- treats a static factory as dependency-free
+- merges all layer models into one global model directory
+- claims folder names or Java public visibility enforce the boundary
+
+## Scenario 19: Independent Directory Guidance for Simple Persistence
+
+### Request
+
+Use this skill alone to place a storage-only Entity, a public repository interface, its public result, one JPA implementation, and a service.
+
+### Evidence
+
+- The JPA Entity has mapping fields, constructors, and ordinary accessors.
+- There is no separate business rule requiring a domain twin.
+- Spring Data already supplies CRUD implementation.
+
+### Expected
+
+- places the contract and public result at repository and repository/model
+- places implementation and storage models at repository/jpa and repository/jpa/model
+- limits service references to the public contract and model
+- preserves the Spring Data implementation role without another forwarding layer
+- does not require another skill, a second business object, or a per-directory contract document
+- leaves Java accessor syntax and persistence API details to the actual implementation task
+
+### Failure Signs
+
+- requires another skill before explaining any placement
+- treats every type called Entity as a domain object
+- creates domain, Mapper, Adapter, and ServiceImpl types just to populate a template
+
 ## Maintenance Review
 
 After running scenarios:

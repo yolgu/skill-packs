@@ -10,31 +10,23 @@
 
 ## Rule strengths and conflicts
 
-Use rule strengths with these meanings:
+Rule-strength meanings are defined in [Rule Application](../SKILL.md#rule-application).
 
-- `MUST` and `MUST NOT`: requirements for normal new code
-- `SHOULD` and `SHOULD NOT`: defaults to follow in most cases, while allowing a better project-specific choice
-- `MAY`: an option permitted when its conditions are met
-- `COMPATIBILITY EXCEPTION`: a narrow departure from a general rule required to preserve an existing external contract
+<a id="compatibility-001"></a>
+### Resolve Java rule conflicts from explicit contracts
 
-### COMPATIBILITY-001 — MUST
+**COMPATIBILITY-001 · MUST**
 
-Resolve conflicting rules in this authority order:
+Apply the user's requested behavior and scope, explicit project instructions, and the actual Java, HTTP, data, and operational contracts. A formatter or framework discovery requirement settles that technical issue; repeated source patterns do not automatically justify a responsibility or data-integrity defect.
 
-1. The actual business behavior and explicit constraints requested by the user
-2. Existing external API, data, and operational compatibility
-3. Project build, formatter, naming, and test rules
-4. Domain invariants and data integrity
-5. Security and sensitive-data protection
-6. This skill's `MUST` and `MUST NOT` rules
-7. `SHOULD` and `SHOULD NOT` rules
-8. `MAY` rules
-
-Do not promote a project convention that exposes sensitive data or bypasses authorization into a good rule.
+Use the strengths above for this skill's Java rules. Do not rank other skills as higher or lower authorities or require them to be loaded. Inspect the actual conflict and preserve required behavior without silently copying a security or data-loss defect.
 
 ## External contracts
 
-### COMPATIBILITY-002 — MUST
+<a id="compatibility-002"></a>
+### Preserve public and operational contracts
+
+**COMPATIBILITY-002 · MUST**
 
 The following are public or operational contracts, not simple code-style details. Do not change them without an explicit request and verification:
 
@@ -48,15 +40,21 @@ The following are public or operational contracts, not simple code-style details
 
 Preserve external contracts through adapters and mappers even while improving names or separating objects internally.
 
-### COMPATIBILITY-004 — MUST
+<a id="compatibility-004"></a>
+### Address security and data-loss risks explicitly
+
+**COMPATIBILITY-004 · MUST**
 
 When existing behavior contains an obvious security vulnerability or data-loss risk, do not reproduce it silently. Explain the dangerous behavior, affected contract, available preservation or correction choices, and verification method to the user, then follow the authorized decision.
 
 ## Compatibility exceptions
 
-### COMPATIBILITY-003 — MUST
+<a id="compatibility-003"></a>
+### Keep compatibility exceptions narrow and traceable
 
-Isolate compatibility code that differs from a general rule at the narrowest adapter boundary, such as a legacy Controller, Response, mapper, or compatibility Policy. Track:
+**COMPATIBILITY-003 · MUST**
+
+Isolate compatibility code that differs from a general rule at the narrowest adapter boundary, such as the affected Controller, Response conversion, or policy. Track:
 
 - The excepted rule ID
 - The external contract being preserved
@@ -65,14 +63,14 @@ Isolate compatibility code that differs from a general rule at the narrowest ada
 - The verification test
 - The reconsideration condition
 
-Use a concise format such as the following when a code comment is necessary.
+Do not assume a legacy system or introduce a compatibility component by default. When a real supported contract needs an exception, use a concise comment only if code and tests do not explain it.
 
 ```java
 // COMPATIBILITY EXCEPTION: JSON-002
-// Legacy client treats an empty nickname as unregistered.
-// Scope: LegacyMemberResponse
-// Verification: LegacyMemberApiCompatibilityTest
-// Revisit: after legacy client support ends
+// The supported client treats an empty nickname as unregistered.
+// Scope: MemberResponse
+// Verification: MemberApiContractTest
+// Revisit: when the supported client contract changes
 return nickname == null ? "" : nickname;
 ```
 
@@ -80,7 +78,10 @@ Do not spread the exception behavior into general Domain rules or new APIs.
 
 ## Change scope
 
-### COMPATIBILITY-005 — MUST
+<a id="compatibility-005"></a>
+### Limit refactoring to the requested work
+
+**COMPATIBILITY-005 · MUST**
 
 Change only what is causally necessary to complete the requested implementation, modification, or refactoring. The following directly related refactorings may be included:
 
@@ -91,9 +92,12 @@ Change only what is causally necessary to complete the requested implementation,
 - Isolating an SDK or Entity type leaking across the current boundary
 - Making the changed behavior testable
 
-### COMPATIBILITY-006 — MUST NOT
+<a id="compatibility-006"></a>
+### Avoid unrelated cleanup and unrequested features
 
-Do not mass-fix unrelated legacy violations. Do not rewrite a whole file or module or broadly move packages for a one-line change. Do not combine renaming every DTO, separating every JPA model, adding an interface to every Service, converting every SQL statement to QueryDSL, or replacing every Lombok annotation in one task.
+**COMPATIBILITY-006 · MUST NOT**
+
+Do not mass-fix unrelated existing violations. Do not rewrite a whole file or module or broadly move packages for a one-line change. Do not combine renaming every DTO, separating every JPA model, adding an interface to every Service, converting every SQL statement to QueryDSL, or replacing every Lombok annotation in one task.
 
 Do not add an unrequested feature, API, database change, Event, dependency, framework, common wrapper, or authorization system under the label of code style. Do not claim to remove something that did not exist.
 
@@ -101,7 +105,10 @@ Apply the relevant `MUST` and `MUST NOT` rules to new code. Safely improve obvio
 
 ## Review and completion reporting
 
-### COMPATIBILITY-007 — MUST
+<a id="compatibility-007"></a>
+### Keep reviews read-only unless changes are authorized
+
+**COMPATIBILITY-007 · MUST**
 
 Do not interpret a review request as authorization to modify files. Include the following in a review finding:
 
@@ -113,7 +120,10 @@ Do not interpret a review request as authorization to modify files. Include the 
 
 Distinguish rule strength and actual impact; do not report a style preference as though it were a critical defect.
 
-### COMPATIBILITY-008 — MUST
+<a id="compatibility-008"></a>
+### Report outcomes, verification, and remaining gaps
+
+**COMPATIBILITY-008 · MUST**
 
 Make an implementation completion report communicate the following instead of focusing on rule compliance itself:
 

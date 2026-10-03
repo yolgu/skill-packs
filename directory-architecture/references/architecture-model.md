@@ -42,7 +42,7 @@ ModuleContract:
     kind: bounded-context
   scope:
     business_context: Ordering
-    architectural_role: mixed
+    architectural_role: business-capability
   responsibility: Accept and progress customer orders
   public_surface:
     commands:
@@ -84,6 +84,8 @@ ModuleContract:
 
 ### Required Contract Questions
 
+A parent directory groups one capability or boundary; children divide its internal responsibilities. A repository directory can own persistence while its model and implementation subdirectories own public data and technical details respectively. File count and folder depth alone do not establish cohesion.
+
 For each significant directory or package, answer:
 
 1. What single responsibility makes this unit cohesive?
@@ -94,7 +96,7 @@ For each significant directory or package, answer:
 6. Which dependencies are allowed and forbidden?
 7. How will the contract be checked?
 
-If these answers are unclear, a new abstraction or top-level directory is premature.
+If these answers are unclear, a new top-level directory is premature. Keep the answers in the task's working model or existing architecture record; do not create per-folder documents or tests by default.
 
 ## 3. Infer Bounded Contexts
 
@@ -163,6 +165,8 @@ This keeps code that changes for the same business reason close and prevents glo
 
 A simple application with little domain behavior may use a smaller feature or framework-native structure. Do not manufacture DDD vocabulary or four empty layers.
 
+Create role directories as responsibilities arise by default. Preserve an explicit project convention that declares known role boundaries in advance using package documentation or metadata. Such declarations do not require placeholder implementations, DTOs, or framework components, and are not a universal scaffold for other projects.
+
 ### Vertical Slices
 
 Use a vertical feature slice when a user-visible behavior has its own input, use case, rules, adapter interaction, and tests. Keep shared domain invariants in domain objects rather than duplicating them across slices.
@@ -173,7 +177,7 @@ Place a cross-context user journey in an application-level feature or process ma
 
 ### Composition Scope
 
-Use app, bootstrap, or config for system-wide composition:
+Use app, bootstrap, or config for system-wide composition. Delegate capability-specific setup to its owner when technical modules exist:
 
 - dependency injection and implementation wiring
 - process startup
@@ -184,15 +188,19 @@ Use app, bootstrap, or config for system-wide composition:
 
 Composition is a logical module with a contract, but it is not a business domain.
 
+Public HTTP, administrative HTTP, scheduled execution, and batch processing may be different entry points into the same business capability. Keep shared state, invariants, and use cases with that capability. A separate entry point alone does not justify a new Bounded Context or deployment unit.
+
 ## 5. Apply Layer Responsibilities
 
 Dependencies point inward. The exact folder names may follow the framework, but responsibilities do not change.
+
+A parent directory can own a capability's public contract and its internal implementation subdirectory. Classify an edge by the referenced type and its declared surface. A consumer may import the contract and its public model; the implementation imports that contract and its own internal models. Configuration may wire the implementation. Include parameter and return types, generic arguments, annotations, and conversion factories when checking package edges. Runtime call order alone does not establish the source dependency direction.
 
 ### Domain
 
 Own:
 
-- entities and aggregates
+- business objects and aggregates, distinct from ORM records
 - value objects
 - domain services when behavior belongs to no one object
 - domain events
@@ -256,6 +264,8 @@ Own:
 
 Composition may know concrete adapters. Inner layers must not depend on Composition.
 
+Declare the scope of each composition module. Some projects wire business adapters locally and restrict root composition to connecting technical capabilities; others assemble business adapters at the root. Preserve the documented contract without making either layout universal.
+
 ## 6. Assign Ownership
 
 ### Data and Migrations
@@ -274,9 +284,31 @@ Scope configuration to the narrowest owner:
 |---|---|---|
 | Page | table columns, page-local feature presentation | page directory |
 | Context | cancellation window, mapping policy, domain feature switch | context config |
-| Application | environment endpoints, root routes, DI, global middleware | app/bootstrap/config |
+| Technical capability | database pool, authentication transport, tracing setup | owning technical module's config |
+| Application | process startup, root routes, wiring between owners | app/bootstrap/config |
 
 Keep one source of truth for every key, default, schema, and mapping. Validate environment and external configuration at the composition boundary.
+
+Shared technical scope does not transfer ownership of business policy. Authentication transport can belong to a technical capability while account eligibility and resource authorization remain with their business owners. Technical modules must not depend on business implementations. Use the project's established names; do not prescribe a fixed platform capability list.
+
+### Boundary Models and Conversion Placement
+
+For a backend organized into role directories, keep each layer's public input and output models under its own model directory. Keep technology-specific models under the implementation's model directory. The relevant framework reference supplies concrete paths; preserve framework-native model locations where required.
+
+Model ownership does not forbid passing a model through its public contract. Distinguish an owned public input/result from an internal ORM record or transport payload.
+
+Keep conversions in a package allowed to reference both sides:
+
+- An inbound package can translate its HTTP model into an application input and an application result into its response.
+- An application package can translate a repository's public result into its own result.
+- A persistence implementation translates ORM records into values for the public repository model. The public model must not import the internal ORM type.
+- A provider implementation translates its private wire model into the published integration model.
+
+Separate layer contracts even when their current fields match if they have different consumers or ownership. Do not duplicate a model for every internal helper call. Do not collect unrelated owners' models in a global model directory.
+
+### Existing Contract Representations
+
+Do not assume a legacy system or create a legacy directory as a default. When a real existing contract needs translation, keep it under that contract's inbound, persistence, or provider owner. A separate compatibility module needs its own responsibility and lifecycle.
 
 ### Routes
 

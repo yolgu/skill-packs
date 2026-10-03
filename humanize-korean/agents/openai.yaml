@@ -1,0 +1,7 @@
+interface:
+  display_name: "Humanize Korean"
+  short_description: "Meaning-preserving natural Korean rewrite"
+  default_prompt: "Use $humanize-korean to rewrite the supplied Korean naturally while preserving facts, register, modality, and protected text."
+policy:
+  allow_implicit_invocation: false
+

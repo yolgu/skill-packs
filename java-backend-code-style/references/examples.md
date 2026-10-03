@@ -1,347 +1,369 @@
-# Complete Flow Examples
+# Connected Java Examples
 
-## Table of contents
+## Scope
 
-- [How to use these examples](#how-to-use-these-examples)
-- [From HTTP to Domain persistence](#from-http-to-domain-persistence)
-- [External provider adapter](#external-provider-adapter)
-- [QueryDSL result conversion](#querydsl-result-conversion)
-- [Legacy adapter with a shared Use Case](#legacy-adapter-with-a-shared-use-case)
+The complete example below updates one stored forecast value. Each Java block is one source file, with package declarations showing source dependencies. The service owns the transaction; the public repository owns its input and result; the JPA implementation owns Entity access and conversion.
 
-## How to use these examples
+Use these roles when the task needs them. This CRUD example has no business rule requiring a separate domain twin, UseCase interface, Mapper, or extra Adapter.
 
-The following snippets are abbreviated examples of responsibility connections. They do not impose a package tree, framework version, or common response structure. Apply the target project's Java, Spring, Jackson, exception, and test conventions first, and reuse only the responsibility boundaries demonstrated here.
+## HTTP input and service input
 
-## From HTTP to Domain persistence
+### UpdateForecastRequest.java
 
-Flow:
+~~~java
+package example.weather.controller.model;
 
-```text
-HTTP Request
-→ Command
-→ Use Case
-→ Authorization
-→ Domain Entity
-→ Repository
-→ Result
-→ HTTP Response
-```
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import example.weather.service.model.UpdateForecastRequestDto;
+import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
 
-### HTTP model and Controller
+public class UpdateForecastRequest {
 
-```java
-@Getter
-public class ApproveAdvertisementRequest {
-
-    @NotBlank
-    private final String approvalReason;
+    @NotNull
+    private final BigDecimal temperature;
 
     @JsonCreator
-    public ApproveAdvertisementRequest(
-        @JsonProperty("approvalReason") final String approvalReason
+    public UpdateForecastRequest(
+        @JsonProperty("temperature") final BigDecimal temperature
     ) {
-        this.approvalReason = approvalReason;
+        this.temperature = temperature;
     }
 
-    public ApproveAdvertisementCommand toCommand(
-        final Long advertisementId
-    ) {
-        return ApproveAdvertisementCommand.of(
-            AdvertisementId.of(advertisementId),
-            ApprovalReason.of(approvalReason)
-        );
+    public UpdateForecastRequestDto toDto(final Long forecastId) {
+        return UpdateForecastRequestDto.of(forecastId, temperature);
     }
 }
-```
+~~~
 
-```java
-@RestController
-@RequiredArgsConstructor
-public class AdvertisementController {
+### UpdateForecastRequestDto.java
 
-    private final ApproveAdvertisementUseCase approveAdvertisementUseCase;
+~~~java
+package example.weather.service.model;
 
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/advertisements/{advertisementId}/approval")
-    public AdvertisementApprovalResponse approve(
-        @CurrentAdmin final AdminCommandContext adminContext,
-        @PathVariable final Long advertisementId,
-        @Valid @RequestBody final ApproveAdvertisementRequest request
-    ) {
-        final ApproveAdvertisementResult result =
-            approveAdvertisementUseCase.approve(
-                adminContext,
-                request.toCommand(advertisementId)
-            );
+import java.math.BigDecimal;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-        return AdvertisementApprovalResponse.from(result);
+@Getter
+@RequiredArgsConstructor(staticName = "of")
+public class UpdateForecastRequestDto {
+
+    private final Long forecastId;
+    private final BigDecimal temperature;
+}
+~~~
+
+## Public repository contract
+
+### ForecastRepository.java
+
+~~~java
+package example.weather.repository;
+
+import example.weather.repository.model.ForecastResultDto;
+import example.weather.repository.model.SaveForecastRequestDto;
+
+public interface ForecastRepository {
+
+    ForecastResultDto update(SaveForecastRequestDto request);
+}
+~~~
+
+### SaveForecastRequestDto.java
+
+~~~java
+package example.weather.repository.model;
+
+import java.math.BigDecimal;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor(staticName = "of")
+public class SaveForecastRequestDto {
+
+    private final Long forecastId;
+    private final BigDecimal temperature;
+}
+~~~
+
+### ForecastResultDto.java
+
+~~~java
+package example.weather.repository.model;
+
+import java.math.BigDecimal;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor(staticName = "of")
+public class ForecastResultDto {
+
+    private final Long forecastId;
+    private final BigDecimal temperature;
+}
+~~~
+
+### ForecastNotFoundException.java
+
+~~~java
+package example.weather.repository;
+
+public class ForecastNotFoundException extends RuntimeException {
+
+    public ForecastNotFoundException(final Long forecastId) {
+        super("Forecast not found: " + forecastId);
     }
 }
-```
+~~~
 
-### Application boundary
+The repository's public types have no JPA or QueryDSL dependency. The normal API exception handler can translate this absence to its own HTTP contract.
 
-```java
-public interface ApproveAdvertisementUseCase {
+## JPA implementation
 
-    ApproveAdvertisementResult approve(
-        AdminCommandContext adminContext,
-        ApproveAdvertisementCommand command
-    );
+### ForecastJpaEntity.java
+
+~~~java
+package example.weather.repository.jpa.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.math.BigDecimal;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "weather_forecast")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class ForecastJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private BigDecimal temperature;
 }
-```
+~~~
 
-```java
-@Service
-@RequiredArgsConstructor
-public class ApproveAdvertisementService
-    implements ApproveAdvertisementUseCase {
+### ForecastSpringDataRepository.java
 
-    private final AdvertisementRepository advertisementRepository;
-    private final AdvertisementManagementAuthorization authorization;
-    private final Clock clock;
+~~~java
+package example.weather.repository.jpa;
 
-    @Override
-    @Transactional
-    public ApproveAdvertisementResult approve(
-        final AdminCommandContext adminContext,
-        final ApproveAdvertisementCommand command
-    ) {
-        authorization
-            .decide(
-                adminContext.getActor(),
-                adminContext.getWorkContext(),
-                AdvertisementManagementAction.APPROVE_ADVERTISEMENT
-            )
-            .requireAllowed();
+import example.weather.repository.jpa.model.ForecastJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-        final Advertisement advertisement = advertisementRepository
-            .findById(command.getAdvertisementId())
-            .orElseThrow(
-                () -> new AdvertisementNotFoundException(
-                    command.getAdvertisementId()
-                )
-            );
-
-        final Instant approvedAt = clock.instant();
-        advertisement.approve(
-            adminContext.getActor().getAdminId(),
-            command.getApprovalReason(),
-            approvedAt
-        );
-
-        final Advertisement savedAdvertisement =
-            advertisementRepository.save(advertisement);
-
-        return ApproveAdvertisementResult.from(savedAdvertisement);
-    }
+public interface ForecastSpringDataRepository
+    extends JpaRepository<ForecastJpaEntity, Long> {
 }
-```
+~~~
 
-### Domain behavior
+### JpaForecastRepository.java
 
-```java
-public void approve(
-    final AdminId approvedBy,
-    final ApprovalReason approvalReason,
-    final Instant approvedAt
-) {
-    if (status != AdvertisementStatus.REVIEW_PENDING) {
-        throw new AdvertisementNotApprovableException(id, status);
-    }
+~~~java
+package example.weather.repository.jpa;
 
-    approval = AdvertisementApproval.of(
-        approvedBy,
-        approvalReason,
-        approvedAt
-    );
-    status = AdvertisementStatus.APPROVED;
-}
-```
+import example.weather.repository.ForecastNotFoundException;
+import example.weather.repository.ForecastRepository;
+import example.weather.repository.jpa.model.ForecastJpaEntity;
+import example.weather.repository.model.ForecastResultDto;
+import example.weather.repository.model.SaveForecastRequestDto;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 
-In this flow, the Controller annotation verifies authentication only, while the Use Case enforces actual business authorization. The Application establishes the reference time once, and the Domain does not query current time directly.
-
-## External provider adapter
-
-Flow:
-
-```text
-Application Port
-→ Provider Adapter
-→ Provider Client
-→ Provider response and error translation
-→ Local Result
-```
-
-```java
-public interface NotificationDeliveryPort {
-
-    NotificationDeliveryResult deliver(
-        NotificationDeliveryRequest request
-    );
-}
-```
-
-```java
-@Component
-@RequiredArgsConstructor
-public class FcmNotificationDeliveryAdapter
-    implements NotificationDeliveryPort {
-
-    private final FcmClient fcmClient;
-    private final FcmNotificationMapper mapper;
-
-    @Override
-    public NotificationDeliveryResult deliver(
-        final NotificationDeliveryRequest request
-    ) {
-        final FcmProviderRequest providerRequest =
-            mapper.toProviderRequest(request);
-
-        try {
-            final FcmProviderResponse providerResponse =
-                fcmClient.send(providerRequest);
-
-            return mapper.toDeliveryResult(providerResponse);
-        } catch (FcmRateLimitException exception) {
-            throw new NotificationDeliveryTemporarilyUnavailableException(
-                exception.getSafeRequestId(),
-                exception
-            );
-        } catch (FcmInvalidRequestException exception) {
-            throw new NotificationDeliveryRejectedException(
-                exception.getSafeRequestId(),
-                exception
-            );
-        }
-    }
-}
-```
-
-If `FcmProviderResponse` means successful acceptance, make `NotificationDeliveryResult` express acceptance as well. Do not overstate it as confirmed end-user receipt. Declare timeout and retry behavior at the Client and Adapter boundary, and do not create duplicate retries for the same Application call.
-
-## QueryDSL result conversion
-
-Flow:
-
-```text
-Application Query + Authorized Scope
-→ QueryDSL Predicate
-→ QueryRow
-→ Application Result
-→ HTTP Response
-```
-
-```java
 @Repository
 @RequiredArgsConstructor
-public class QueryDslMemberQueryRepository
-    implements MemberQueryRepository {
+public class JpaForecastRepository implements ForecastRepository {
 
-    private final JPAQueryFactory queryFactory;
+    private final ForecastSpringDataRepository forecasts;
 
     @Override
-    public List<MemberSummaryResult> search(
-        final SearchMembersQuery query,
-        final AuthorizedMemberScope authorizedScope
-    ) {
-        if (authorizedScope.isEmpty()) {
-            return List.of();
-        }
+    public ForecastResultDto update(final SaveForecastRequestDto request) {
+        final ForecastJpaEntity entity = forecasts
+            .findById(request.getForecastId())
+            .orElseThrow(() -> new ForecastNotFoundException(request.getForecastId()));
 
-        final BooleanBuilder predicate = new BooleanBuilder();
-        predicate.and(scopePredicate(authorizedScope));
-        predicate.and(cityCodeEquals(query.getCityCode()));
-        predicate.and(statusEquals(query.getStatus()));
+        entity.setTemperature(request.getTemperature());
+        final ForecastJpaEntity saved = forecasts.save(entity);
 
-        final List<MemberSummaryQueryRow> rows = queryFactory
-            .select(
-                Projections.constructor(
-                    MemberSummaryQueryRow.class,
-                    member.id,
-                    member.nickname,
-                    member.status
-                )
-            )
-            .from(member)
-            .where(predicate)
-            .orderBy(
-                member.createdAt.desc(),
-                member.id.desc()
-            )
-            .limit(query.getPageSize())
-            .fetch();
-
-        return rows.stream()
-            .map(MemberSummaryResult::from)
-            .toList();
-    }
-
-    private BooleanExpression cityCodeEquals(final String cityCode) {
-        if (cityCode == null || cityCode.isBlank()) {
-            return null;
-        }
-
-        return member.cityCode.eq(cityCode);
+        return ForecastResultDto.of(saved.getId(), saved.getTemperature());
     }
 }
-```
+~~~
 
-Use a nullable Predicate helper only for a simple optional filter, and handle authorization Scope explicitly. Prevent an empty Scope from becoming an unrestricted query. Do not return a Q-type or QueryRow beyond the Application boundary.
+Entity access and value mapping stay here. ForecastResultDto does not declare from(ForecastJpaEntity), and the Entity does not accept a DTO.
 
-## Legacy adapter with a shared Use Case
+## Application flow and result
 
-Flow:
+### ForecastService.java
 
-```text
-Legacy Controller → Legacy Request conversion ┐
-                                               ├→ Shared Use Case
-Admin Controller  → Admin Command conversion  ┘
-                                               ├→ Legacy Response
-                                               └→ Admin Response
-```
+~~~java
+package example.weather.service;
 
-```java
+import example.weather.repository.ForecastRepository;
+import example.weather.repository.model.ForecastResultDto;
+import example.weather.repository.model.SaveForecastRequestDto;
+import example.weather.service.model.UpdateForecastRequestDto;
+import example.weather.service.model.UpdateForecastResultDto;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class ForecastService {
+
+    private final ForecastRepository forecasts;
+
+    @Transactional
+    public UpdateForecastResultDto update(final UpdateForecastRequestDto request) {
+        final SaveForecastRequestDto storageRequest = SaveForecastRequestDto.of(
+            request.getForecastId(),
+            request.getTemperature()
+        );
+        final ForecastResultDto stored = forecasts.update(storageRequest);
+        return UpdateForecastResultDto.from(stored);
+    }
+}
+~~~
+
+### UpdateForecastResultDto.java
+
+~~~java
+package example.weather.service.model;
+
+import example.weather.repository.model.ForecastResultDto;
+import java.math.BigDecimal;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+public class UpdateForecastResultDto {
+
+    private final Long forecastId;
+    private final BigDecimal temperature;
+
+    public static UpdateForecastResultDto from(final ForecastResultDto result) {
+        return new UpdateForecastResultDto(result.getForecastId(), result.getTemperature());
+    }
+}
+~~~
+
+When actual business rules exist, this service invokes a plain business object or Policy before preparing the storage request. Authorization and execution time are established at the application boundary when that operation requires them. Those responsibilities do not move to the JPA Entity.
+
+## HTTP output
+
+### ForecastResponse.java
+
+~~~java
+package example.weather.controller.model;
+
+import example.weather.service.model.UpdateForecastResultDto;
+import java.math.BigDecimal;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+public class ForecastResponse {
+
+    private final Long forecastId;
+    private final BigDecimal temperature;
+
+    public static ForecastResponse from(final UpdateForecastResultDto result) {
+        return new ForecastResponse(result.getForecastId(), result.getTemperature());
+    }
+}
+~~~
+
+### ForecastController.java
+
+~~~java
+package example.weather.controller;
+
+import example.weather.controller.model.ForecastResponse;
+import example.weather.controller.model.UpdateForecastRequest;
+import example.weather.service.ForecastService;
+import example.weather.service.model.UpdateForecastResultDto;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
 @RestController
 @RequiredArgsConstructor
-public class LegacyMemberController {
+public class ForecastController {
 
-    private final SearchMembersUseCase searchMembersUseCase;
+    private final ForecastService forecasts;
 
-    @GetMapping("/legacy/member/list")
-    public LegacyMemberSearchResponse search(
-        @CurrentAdmin final AdminQueryContext adminContext,
-        final LegacyMemberSearchRequest request
+    @PatchMapping("/forecasts/{forecastId}")
+    public ForecastResponse update(
+        @PathVariable("forecastId") final Long forecastId,
+        @Valid @RequestBody final UpdateForecastRequest request
     ) {
-        final SearchMembersResult result =
-            searchMembersUseCase.search(
-                adminContext,
-                request.toQuery()
-            );
-
-        return LegacyMemberSearchResponse.from(result);
+        final UpdateForecastResultDto result = forecasts.update(request.toDto(forecastId));
+        return ForecastResponse.from(result);
     }
 }
-```
+~~~
 
-```java
-public static LegacyMemberResponse from(
-    final MemberSummaryResult result
+## Provider conversion
+
+This excerpt belongs inside a provider implementation. The protocol client exists only if it already has a separate communication responsibility; a small provider implementation can perform the call directly.
+
+~~~java
+@Override
+public NotificationDeliveryResultDto deliver(
+    final NotificationDeliveryRequestDto request
 ) {
-    // COMPATIBILITY EXCEPTION: JSON-002
-    // The supported legacy client treats an empty nickname as unregistered.
-    // Scope: LegacyMemberResponse
-    // Verification: LegacyMemberApiCompatibilityTest
-    final String nickname = result.getNickname() == null
-        ? ""
-        : result.getNickname();
-
-    return new LegacyMemberResponse(
-        result.getMemberId(),
-        nickname,
-        result.getStatusCode()
+    final FcmProviderResponse response = client.send(
+        FcmProviderRequest.of(request.getRecipient(), request.getMessage())
     );
+    return NotificationDeliveryResultDto.of(response.getRequestId(), response.isAccepted());
 }
-```
+~~~
 
-Legacy and new Controllers may invoke the same Use Case and authorization Policy, but each external contract owns its Request, Response, and error Handler. Keep compatibility behavior in the legacy adapter and do not propagate it into the Domain or a new Response.
+The published result receives values, not FcmProviderResponse. Translate SDK failures into the integration contract's failure meanings in this implementation. Acceptance means provider acceptance, not confirmed end-user receipt. Use the configured timeout and retry policy without duplicating retries at every layer.
+
+## Query result conversion
+
+This excerpt belongs inside the query implementation after the authorized scope and query result have been obtained.
+
+~~~java
+if (authorizedScope.isEmpty()) {
+    return List.of();
+}
+
+final List<MemberSummaryQueryRow> rows = queryFactory
+    .select(Projections.constructor(MemberSummaryQueryRow.class, member.id, member.nickname))
+    .from(member)
+    .where(scopePredicate(authorizedScope))
+    .orderBy(member.id.asc())
+    .limit(request.getPageSize())
+    .fetch();
+
+return rows.stream()
+    .map((MemberSummaryQueryRow row) -> MemberSummaryResultDto.of(row.getId(), row.getNickname()))
+    .toList();
+~~~
+
+MemberSummaryQueryRow is internal. MemberSummaryResultDto is the public repository result and does not import that row or a QueryDSL type. A plain DTO projection can also be used directly when no internal query representation is needed. An empty authorized scope must never become an unrestricted query.
+
+For an existing API with a required representation difference, keep that conversion in its own HTTP response or handler. Do not assume a legacy endpoint or introduce a compatibility layer into a new example.

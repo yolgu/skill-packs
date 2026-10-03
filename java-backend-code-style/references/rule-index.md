@@ -1,227 +1,212 @@
-# Rule Index
+# Java Rule Index
 
-Rule strengths are `MUST`, `MUST NOT`, `SHOULD`, `SHOULD NOT`, `MAY`, and `COMPATIBILITY EXCEPTION`. Follow the linked reference for detailed decisions and exceptions.
+Navigation only. Definitions and strengths are recorded once in the linked rule sections.
+Select the relevant topic; the examples illustrate those rules and do not define additional requirements.
 
-## Table of contents
+## Java Language, Formatting, and Lombok Rules
 
-- [Java language, formatting, and Lombok](#java-language-formatting-and-lombok)
-- [Objects, methods, naming, and packages](#objects-methods-naming-and-packages)
-- [HTTP, DTO, and JSON](#http-dto-and-json)
-- [Domain, validation, and authorization](#domain-validation-and-authorization)
-- [JPA, QueryDSL, and SQL](#jpa-querydsl-and-sql)
-- [Use Cases, Spring, external boundaries, and operational entry points](#use-cases-spring-external-boundaries-and-operational-entry-points)
-- [Exceptions, logging, configuration, and documentation](#exceptions-logging-configuration-and-documentation)
-- [Testing, tooling, and change scope](#testing-tooling-and-change-scope)
+| ID | Rule section |
+|---|---|
+| JAVA-001 | [Use Java features supported by the project](java-language-and-lombok.md#java-001) |
+| JAVA-002 | [Keep the existing javax or jakarta namespace](java-language-and-lombok.md#java-002) |
+| JAVA-005 | [Use preview features only when explicitly supported](java-language-and-lombok.md#java-005) |
+| JAVA-003 | [Use regular classes instead of records](java-language-and-lombok.md#java-003) |
+| JAVA-004 | [Avoid Java var and Lombok val or var](java-language-and-lombok.md#java-004) |
+| JAVA-006 | [Declare local variable types explicitly](java-language-and-lombok.md#java-006) |
+| JAVA-007 | [Make immutability clear without requiring final everywhere](java-language-and-lombok.md#java-007) |
+| JAVA-008 | [Choose types that preserve meaning and precision](java-language-and-lombok.md#java-008) |
+| FORMAT-001 | [Follow the project's formatting rules](java-language-and-lombok.md#format-001) |
+| FORMAT-002 | [Use consistent defaults when formatting rules are absent](java-language-and-lombok.md#format-002) |
+| FORMAT-003 | [Use braces and explicit imports](java-language-and-lombok.md#format-003) |
+| FORMAT-004 | [Format code to reveal the business flow](java-language-and-lombok.md#format-004) |
+| FORMAT-005 | [Keep formatting changes within the task's scope](java-language-and-lombok.md#format-005) |
+| LOMBOK-001 | [Use Lombok only when already adopted](java-language-and-lombok.md#lombok-001) |
+| LOMBOK-002 | [Limit generated getters and constructors to clear contracts](java-language-and-lombok.md#lombok-002) |
+| LOMBOK-003 | [Use Lombok where framework conventions justify it](java-language-and-lombok.md#lombok-003) |
+| LOMBOK-004 | [Reserve builders for objects with many optional fields](java-language-and-lombok.md#lombok-004) |
+| LOMBOK-005 | [Avoid Lombok annotations that obscure object behavior](java-language-and-lombok.md#lombok-005) |
+| LOMBOK-006 | [Generate equality and toString only for safe value types](java-language-and-lombok.md#lombok-006) |
 
-## Java language, formatting, and Lombok
+## Java Methods, Access, and Names
 
-| ID | Strength | Summary | Details |
-|---|---|---|---|
-| JAVA-001 | MUST | Use the project toolchain and runtime as the source of truth for available Java features. | [Java language and Lombok](java-language-and-lombok.md) |
-| JAVA-002 | MUST NOT | Do not begin a `javax` or `jakarta` migration solely as a code-style task. | [Java language and Lombok](java-language-and-lombok.md) |
-| JAVA-003 | MUST NOT | Do not use Java `record`. | [Java language and Lombok](java-language-and-lombok.md) |
-| JAVA-004 | MUST NOT | Do not use Java `var` or Lombok `val` and `var`. | [Java language and Lombok](java-language-and-lombok.md) |
-| JAVA-005 | MUST | Use preview features only when the project explicitly enables and supports them. | [Java language and Lombok](java-language-and-lombok.md) |
-| JAVA-006 | MUST | Use explicit types for local variables. | [Java language and Lombok](java-language-and-lombok.md) |
-| JAVA-007 | SHOULD | Make dependencies, constants, and immutable fields `final` without mechanically requiring `final` on every parameter and local variable. | [Java language and Lombok](java-language-and-lombok.md) |
-| JAVA-008 | MUST | Use types for time, money, character sets, enums, and collections that preserve meaning and precision. | [Java language and Lombok](java-language-and-lombok.md) |
-| JAVA-009 | MUST | Establish the reference time and identifiers for a business decision at the execution boundary and pass them inward. | [Java language and Lombok](java-language-and-lombok.md) |
-| FORMAT-001 | MUST | Prefer the project formatter, static analysis, and EditorConfig. | [Java language and Lombok](java-language-and-lombok.md) |
-| FORMAT-002 | SHOULD | Use the agreed fallback formatting when the project defines no rule. | [Java language and Lombok](java-language-and-lombok.md) |
-| FORMAT-003 | MUST | Use braces and prohibit wildcard imports. | [Java language and Lombok](java-language-and-lombok.md) |
-| FORMAT-004 | SHOULD | Use line wrapping and blank lines to reveal the business flow. | [Java language and Lombok](java-language-and-lombok.md) |
-| FORMAT-005 | MUST | Avoid unrelated whole-file formatting and direct edits to generated code. | [Java language and Lombok](java-language-and-lombok.md) |
-| LOMBOK-001 | MUST NOT | Do not add Lombok solely to apply code style. | [Java language and Lombok](java-language-and-lombok.md) |
-| LOMBOK-002 | SHOULD | Limit `@Getter` and `@RequiredArgsConstructor` to public contracts and straightforward injection. | [Java language and Lombok](java-language-and-lombok.md) |
-| LOMBOK-003 | MAY | Use restricted framework constructors and the project's `@Slf4j` convention when applicable. | [Java language and Lombok](java-language-and-lombok.md) |
-| LOMBOK-004 | SHOULD NOT | Do not use a builder as the default construction mechanism for Domain, JPA, or Spring Bean types. | [Java language and Lombok](java-language-and-lombok.md) |
-| LOMBOK-005 | MUST NOT | Do not use `@Data`, class-level `@Setter`, `@SneakyThrows`, or chained setters. | [Java language and Lombok](java-language-and-lombok.md) |
-| LOMBOK-006 | MUST | Limit automatic equality and `toString` to safe value types. | [Java language and Lombok](java-language-and-lombok.md) |
+| ID | Rule section |
+|---|---|
+| OBJECT-005 | [Choose streams or loops for readability](object-and-method-style.md#object-005) |
+| OBJECT-007 | [Use explicit Java contract types](object-and-method-style.md#object-007) |
+| OBJECT-008 | [Use Java access levels deliberately](object-and-method-style.md#object-008) |
+| NAMING-001 | [Use English business identifiers](object-and-method-style.md#naming-001) |
+| NAMING-002 | [Name Java implementation roles](object-and-method-style.md#naming-002) |
+| NAMING-003 | [Name implementations without breaking framework discovery](object-and-method-style.md#naming-003) |
+| NAMING-004 | [Match Java method names to return and failure behavior](object-and-method-style.md#naming-004) |
+| NAMING-005 | [Name Boolean values, collections, and acronyms](object-and-method-style.md#naming-005) |
 
-## Objects, methods, naming, and packages
+## HTTP, DTO, and JSON Rules
 
-| ID | Strength | Summary | Details |
-|---|---|---|---|
-| OBJECT-001 | MUST | Give a class and method one cohesive responsibility and a clear reason to change. | [Object and method style](object-and-method-style.md) |
-| OBJECT-002 | SHOULD | Make a Use Case read in the business order of input, lookup, decision, behavior, persistence, effects, and result. | [Object and method style](object-and-method-style.md) |
-| OBJECT-003 | SHOULD | Use a guard clause when it reduces nesting and exposes a failure condition. | [Object and method style](object-and-method-style.md) |
-| OBJECT-004 | SHOULD NOT | Do not use a Boolean flag to switch behavior. | [Object and method style](object-and-method-style.md) |
-| OBJECT-005 | SHOULD | Choose between a stream and a loop according to which expresses the business meaning more clearly. | [Object and method style](object-and-method-style.md) |
-| OBJECT-006 | MUST | Do not hide a state change inside a method that appears to be a query. | [Object and method style](object-and-method-style.md) |
-| OBJECT-007 | MUST NOT | Do not use `Map<String, Object>`, `Object[]`, or raw types in Domain or Application contracts. | [Object and method style](object-and-method-style.md) |
-| OBJECT-008 | SHOULD | Prefer the narrowest access and composition, and avoid premature generalization. | [Object and method style](object-and-method-style.md) |
-| NAMING-001 | MUST | Use English business terms and intention-revealing names. | [Object and method style](object-and-method-style.md) |
-| NAMING-002 | SHOULD | Use established suffixes that reveal the layer and role. | [Object and method style](object-and-method-style.md) |
-| NAMING-003 | SHOULD NOT | Avoid vague names such as `Impl`, `Manager`, `Helper`, `Utils`, and `Common`. | [Object and method style](object-and-method-style.md) |
-| NAMING-004 | MUST | Align the return and failure semantics of `get/find/exists/can/calculate/create/require` names. | [Object and method style](object-and-method-style.md) |
-| NAMING-005 | SHOULD | Name Booleans, collections, and acronyms so questions, plurality, and key meaning are clear. | [Object and method style](object-and-method-style.md) |
-| PACKAGE-001 | MUST | First identify whether the existing project is organized by business module or by layer. | [Object and method style](object-and-method-style.md) |
-| PACKAGE-002 | MUST NOT | Do not mix synonymous package conventions for the same role within one scope. | [Object and method style](object-and-method-style.md) |
-| PACKAGE-003 | MUST NOT | Do not impose a new package tree or broad package movement under the label of code style. | [Object and method style](object-and-method-style.md) |
-| PACKAGE-004 | SHOULD | In an existing business module, keep Config, SQL, Adapter, Scheduler, and Batch code near its owner. | [Object and method style](object-and-method-style.md) |
+| ID | Rule section |
+|---|---|
+| DTO-001 | [Separate HTTP request and response types](http-dto-and-json-style.md#dto-001) |
+| DTO-002 | [Use consistent application input and result types](http-dto-and-json-style.md#dto-002) |
+| DTO-003 | [Separate DTOs when their contracts differ](http-dto-and-json-style.md#dto-003) |
+| DTO-006 | [Prefer immutable constructor binding for HTTP requests](http-dto-and-json-style.md#dto-006) |
+| DTO-004 | [Distinguish conversion from object construction](http-dto-and-json-style.md#dto-004) |
+| DTO-005 | [Keep mappings explicit and free of business decisions](http-dto-and-json-style.md#dto-005) |
+| CONTROLLER-001 | [Keep controllers focused on HTTP and use case invocation](http-dto-and-json-style.md#controller-001) |
+| CONTROLLER-002 | [Convert framework context before entering inner layers](http-dto-and-json-style.md#controller-002) |
+| CONTROLLER-003 | [Use ResponseEntity when HTTP control is needed](http-dto-and-json-style.md#controller-003) |
+| CONTROLLER-004 | [Return only dedicated API response types](http-dto-and-json-style.md#controller-004) |
+| CONTROLLER-005 | [Enforce business authorization in the use case](http-dto-and-json-style.md#controller-005) |
+| JSON-001 | [Identify the actual JSON contract](http-dto-and-json-style.md#json-001) |
+| JSON-002 | [Preserve existing JSON and HTTP behavior](http-dto-and-json-style.md#json-002) |
+| JSON-003 | [Use Jackson annotations for real contract differences](http-dto-and-json-style.md#json-003) |
+| JSON-004 | [Reuse configured mappers and existing response conventions](http-dto-and-json-style.md#json-004) |
+| JSON-005 | [Keep entity serialization out of API contracts](http-dto-and-json-style.md#json-005) |
+| JSON-006 | [Restrict polymorphic deserialization to permitted types](http-dto-and-json-style.md#json-006) |
 
-## HTTP, DTO, and JSON
+## Domain, Validation, and Authorization Rules
 
-| ID | Strength | Summary | Details |
-|---|---|---|---|
-| DTO-001 | MUST | Do not share an HTTP Request and Response type. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| DTO-002 | MUST | Use either `Command/Query/Result` or the existing `RequestDto/ResultDto` convention consistently at an Application boundary. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| DTO-003 | SHOULD NOT | Do not duplicate identical-field DTOs mechanically according to layer count. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| DTO-004 | MUST | Distinguish the conversion and construction meanings of `toXxx/from/of/create/restore`. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| DTO-005 | SHOULD | Map small objects explicitly and limit MapStruct to repeated mechanical mappings. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| DTO-006 | SHOULD | Use verifiable immutable constructor binding for a new HTTP Request. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| CONTROLLER-001 | MUST | Keep a Controller focused on HTTP conversion and Use Case invocation. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| CONTROLLER-002 | MUST NOT | Do not pass Servlet, Session, or authentication-framework objects into the Application or Domain. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| CONTROLLER-003 | SHOULD | Return a Response DTO directly when no actual HTTP control is required. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| CONTROLLER-004 | MUST NOT | Do not expose JPA, Domain, Query, or provider models through the API. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| CONTROLLER-005 | MUST | Use Controller security annotations only for the authentication boundary. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| JSON-001 | MUST | Treat existing JSON, ObjectMapper configuration, and contract tests as the source of truth for the external contract. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| JSON-002 | MUST | Preserve field names, types, nulls, omission, dates, enums, and status codes. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| JSON-003 | SHOULD | Declare Jackson annotations only when they express an actual contract difference. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| JSON-004 | MUST NOT | Do not create a new `ObjectMapper` in each class or impose a common response wrapper. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| JSON-005 | MUST NOT | Do not distort an external contract for convenient internal Entity serialization. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
-| JSON-006 | MUST | Declare the permitted discriminator and types for polymorphic deserialization. | [HTTP, DTO, and JSON](http-dto-and-json-style.md) |
+| ID | Rule section |
+|---|---|
+| DOMAIN-001 | [Express business behavior in plain Java objects](domain-and-authorization-style.md#domain-001) |
+| DOMAIN-002 | [Distinguish new construction from restoration](domain-and-authorization-style.md#domain-002) |
+| DOMAIN-003 | [Use value objects for meaningful domain values](domain-and-authorization-style.md#domain-003) |
+| DOMAIN-005 | [Keep a separated domain independent of frameworks](domain-and-authorization-style.md#domain-005) |
+| DOMAIN-006 | [Pass time and identifiers into the domain](domain-and-authorization-style.md#domain-006) |
+| DOMAIN-004 | [Keep domain services focused on pure business decisions](domain-and-authorization-style.md#domain-004) |
+| DOMAIN-007 | [Use domain events for completed business facts](domain-and-authorization-style.md#domain-007) |
+| VALIDATION-001 | [Validate each concern at its owning layer](domain-and-authorization-style.md#validation-001) |
+| VALIDATION-002 | [Keep business constraints under domain ownership](domain-and-authorization-style.md#validation-002) |
+| VALIDATION-003 | [Keep external lookups out of Bean Validators](domain-and-authorization-style.md#validation-003) |
+| VALIDATION-004 | [Give normalization one owner](domain-and-authorization-style.md#validation-004) |
+| OPTIONAL-001 | [Use Optional for a single result that may be absent](domain-and-authorization-style.md#optional-001) |
+| OPTIONAL-002 | [Keep Optional out of fields and parameters](domain-and-authorization-style.md#optional-002) |
+| OPTIONAL-003 | [Return empty collections and choose fallbacks carefully](domain-and-authorization-style.md#optional-003) |
+| AUTH-001 | [Distinguish roles, actions, attributes, and policies](domain-and-authorization-style.md#auth-001) |
+| AUTH-002 | [Authorize business actions rather than role codes](domain-and-authorization-style.md#auth-002) |
+| AUTH-003 | [Give each business area its own authorization policy](domain-and-authorization-style.md#auth-003) |
+| AUTH-004 | [Keep required authorization compatibility local](domain-and-authorization-style.md#auth-004) |
+| AUTH-005 | [Introduce authorization abstractions only for real repetition](domain-and-authorization-style.md#auth-005) |
+| AUTH-006 | [Translate authorized scopes into query conditions](domain-and-authorization-style.md#auth-006) |
+| AUTH-007 | [Enforce authorization before protected actions](domain-and-authorization-style.md#auth-007) |
+| AUTH-008 | [Deny unknown permissions and empty scopes](domain-and-authorization-style.md#auth-008) |
+| AUTH-009 | [Use backend authorization as the security authority](domain-and-authorization-style.md#auth-009) |
 
-## Domain, validation, and authorization
+## JPA, QueryDSL, and SQL Rules
 
-| ID | Strength | Summary | Details |
-|---|---|---|---|
-| DOMAIN-001 | MUST | Make an Entity protect its own invariants and state transitions. | [Domain and authorization](domain-and-authorization-style.md) |
-| DOMAIN-002 | SHOULD | Distinguish new construction from persisted-state restoration. | [Domain and authorization](domain-and-authorization-style.md) |
-| DOMAIN-003 | MUST | Model only genuinely meaningful values as immutable Value Objects. | [Domain and authorization](domain-and-authorization-style.md) |
-| DOMAIN-004 | SHOULD | Use a Domain Service or Policy only for a pure decision or calculation that does not belong naturally to one object. | [Domain and authorization](domain-and-authorization-style.md) |
-| DOMAIN-005 | MUST NOT | Do not make a separated Domain depend on Spring, JPA, HTTP, QueryDSL, or a provider SDK. | [Domain and authorization](domain-and-authorization-style.md) |
-| DOMAIN-006 | MUST | Do not generate current time or identifiers directly inside the Domain. | [Domain and authorization](domain-and-authorization-style.md) |
-| DOMAIN-007 | SHOULD | When the project already uses Domain Events, express only completed business facts. | [Domain and authorization](domain-and-authorization-style.md) |
-| VALIDATION-001 | MUST | Place syntax, external-state, and invariant validation in the appropriate Presentation, Application, or Domain layer. | [Domain and authorization](domain-and-authorization-style.md) |
-| VALIDATION-002 | MUST | Keep the Domain as the final authority and value owner for repeated business constraints. | [Domain and authorization](domain-and-authorization-style.md) |
-| VALIDATION-003 | MUST NOT | Do not inject a Repository, provider, Session, or authorization Policy into a Bean Validator. | [Domain and authorization](domain-and-authorization-style.md) |
-| VALIDATION-004 | MUST | Assign normalization to one owner and avoid duplicate adjustment across layers. | [Domain and authorization](domain-and-authorization-style.md) |
-| OPTIONAL-001 | MUST | Use `Optional<T>` only for a single return value that may normally be absent. | [Domain and authorization](domain-and-authorization-style.md) |
-| OPTIONAL-002 | MUST NOT | Do not use Optional in parameters, DTO fields, Entity fields, or collection elements. | [Domain and authorization](domain-and-authorization-style.md) |
-| OPTIONAL-003 | MUST | Return an empty collection for an absent plural result. | [Domain and authorization](domain-and-authorization-style.md) |
-| AUTH-001 | MUST | Separate Role, Permission or Action, Attribute, and Policy. | [Domain and authorization](domain-and-authorization-style.md) |
-| AUTH-002 | MUST | Make a Use Case request authorization for a business Action rather than a role code. | [Domain and authorization](domain-and-authorization-style.md) |
-| AUTH-003 | MUST | Make a domain-specific Policy own authorization decisions for each business area. | [Domain and authorization](domain-and-authorization-style.md) |
-| AUTH-004 | MUST | Centralize legacy role, account, and Session exceptions in a compatibility Policy. | [Domain and authorization](domain-and-authorization-style.md) |
-| AUTH-005 | SHOULD NOT | Do not create a general authorization DSL, rule engine, or role inheritance before actual repetition exists. | [Domain and authorization](domain-and-authorization-style.md) |
-| AUTH-006 | MUST | Make a Policy calculate an allowed Scope and a query adapter translate it to SQL conditions. | [Domain and authorization](domain-and-authorization-style.md) |
-| AUTH-007 | MUST | Distinguish visibility checks with `isAllowed()` from actual enforcement with `requireAllowed()`. | [Domain and authorization](domain-and-authorization-style.md) |
-| AUTH-008 | MUST | Deny unknown authorization combinations and an empty allowed range by default. | [Domain and authorization](domain-and-authorization-style.md) |
-| AUTH-009 | MUST NOT | Do not treat UI hiding as security enforcement or duplicate authorization conditions in Controller, SQL, and UI code. | [Domain and authorization](domain-and-authorization-style.md) |
+| ID | Rule section |
+|---|---|
+| JPA-001 | [Keep business behavior separate from JPA storage](persistence-jpa-querydsl-and-sql.md#jpa-001) |
+| JPA-002 | [Keep the public repository contract independent of JPA](persistence-jpa-querydsl-and-sql.md#jpa-002) |
+| JPA-003 | [Use ordinary JPA data construction and access](persistence-jpa-querydsl-and-sql.md#jpa-003) |
+| JPA-004 | [Avoid generated behavior that weakens JPA entities](persistence-jpa-querydsl-and-sql.md#jpa-004) |
+| JPA-005 | [Model required relationships with explicit lazy loading](persistence-jpa-querydsl-and-sql.md#jpa-005) |
+| JPA-006 | [Use cascading only for owned lifecycles](persistence-jpa-querydsl-and-sql.md#jpa-006) |
+| JPA-007 | [Keep persistence relationships consistent inside the implementation](persistence-jpa-querydsl-and-sql.md#jpa-007) |
+| JPA-008 | [Define entity equality only for a real need](persistence-jpa-querydsl-and-sql.md#jpa-008) |
+| QUERY-001 | [Keep repositories focused on persistence](persistence-jpa-querydsl-and-sql.md#query-001) |
+| QUERY-002 | [Separate complex reads when responsibilities differ](persistence-jpa-querydsl-and-sql.md#query-002) |
+| QUERY-003 | [Choose the simplest suitable query tool](persistence-jpa-querydsl-and-sql.md#query-003) |
+| QUERY-004 | [Prefer composition for QueryDSL repositories](persistence-jpa-querydsl-and-sql.md#query-004) |
+| QUERY-005 | [Make bulk update behavior and bypassed rules explicit](persistence-jpa-querydsl-and-sql.md#query-005) |
+| QUERY-006 | [Limit nullable predicates to simple optional filters](persistence-jpa-querydsl-and-sql.md#query-006) |
+| QUERY-007 | [Compose authorization scopes and complex conditions explicitly](persistence-jpa-querydsl-and-sql.md#query-007) |
+| QUERY-008 | [Keep QueryDSL types inside infrastructure](persistence-jpa-querydsl-and-sql.md#query-008) |
+| QUERY-009 | [Use explicit query results and stable pagination](persistence-jpa-querydsl-and-sql.md#query-009) |
+| SQL-001 | [Keep complex SQL near its owning business code](persistence-jpa-querydsl-and-sql.md#sql-001) |
+| SQL-002 | [Make SQL inputs and results explicit](persistence-jpa-querydsl-and-sql.md#sql-002) |
+| SQL-003 | [Document complex SQL contracts and ownership](persistence-jpa-querydsl-and-sql.md#sql-003) |
+| SQL-004 | [Respect each business area's table ownership](persistence-jpa-querydsl-and-sql.md#sql-004) |
+| SQL-005 | [Verify database-specific queries on the supported database](persistence-jpa-querydsl-and-sql.md#sql-005) |
 
-## JPA, QueryDSL, and SQL
+## Spring Boundary, Use Case, Adapter, Scheduler, and Batch Rules
 
-| ID | Strength | Summary | Details |
-|---|---|---|---|
-| JPA-001 | MUST | Separate Domain and JPA models conditionally according to business meaning and schema distortion. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| JPA-002 | MUST | Reveal a separated persistence model as a storage representation through names and a mapper. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| JPA-003 | MUST | Use restricted constructors and mutation paths for a JPA Entity. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| JPA-004 | MUST NOT | Do not use public setters, builders, automatic equality, or automatic `toString` on a JPA Entity. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| JPA-005 | MUST | Define relationships only for actual Aggregate traversal and use explicit LAZY loading by default. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| JPA-006 | MUST | Use cascading and orphan removal only with lifecycle ownership. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| JPA-007 | MUST | Encapsulate Entity collections and maintain both sides of a bidirectional relationship in one method. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| JPA-008 | MUST | Implement Entity equality explicitly only when needed, accounting for proxies and identifier lifecycle. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| QUERY-001 | MUST | Treat a Repository as a persistence boundary, not a business decision maker. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| QUERY-002 | SHOULD | Separate a Query Repository only when a complex read has a genuinely different reason to change. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| QUERY-003 | MUST | Select JPA, QueryDSL, or SQL according to simple CRUD, dynamic lookup, or complex-query needs. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| QUERY-004 | MUST NOT | Do not require `QuerydslRepositorySupport` for every QueryDSL implementation. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| QUERY-005 | MUST | For bulk DML, state bypassed rules, transaction, synchronization, re-execution, and row-count behavior. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| QUERY-006 | MUST | Limit nullable Predicate helpers to simple optional AND conditions. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| QUERY-007 | MUST | Compose complex OR groups, authorization Scopes, and empty-collection conditions explicitly. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| QUERY-008 | MUST NOT | Do not expose Q-types or QueryDSL dependencies to the Domain or Application. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| QUERY-009 | MUST | Receive a complex read in an explicit QueryRow, Projection, or Result and use stable pagination. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| SQL-001 | SHOULD | Manage complex SQL near its owning code with a business-purpose name. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| SQL-002 | MUST | Define an SQL contract with explicit columns, aliases, parameters, ordering, nulls, and period boundaries. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| SQL-003 | MUST | Track ownership, result meaning, database specificity, and compatibility rationale for complex SQL. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| SQL-004 | MUST NOT | Do not write to a table owned by another business area. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
-| SQL-005 | SHOULD | Verify a database-specific query against the supported database and representative boundary values. | [Persistence and queries](persistence-jpa-querydsl-and-sql.md) |
+| ID | Rule section |
+|---|---|
+| USECASE-001 | [Expose a Use Case interface when its contract needs separation](spring-boundaries-and-adapters.md#usecase-001) |
+| USECASE-002 | [Implement the application flow through public contracts](spring-boundaries-and-adapters.md#usecase-002) |
+| USECASE-003 | [Keep Spring components direct](spring-boundaries-and-adapters.md#usecase-003) |
+| USECASE-004 | [Inject dependencies through constructors](spring-boundaries-and-adapters.md#usecase-004) |
+| TRANSACTION-001 | [Let the application use case own the transaction](spring-boundaries-and-adapters.md#transaction-001) |
+| TRANSACTION-002 | [Use read-only transactions only for read-only work](spring-boundaries-and-adapters.md#transaction-002) |
+| TRANSACTION-003 | [Keep business transactions at the application layer](spring-boundaries-and-adapters.md#transaction-003) |
+| TRANSACTION-004 | [Avoid holding database locks during slow external calls](spring-boundaries-and-adapters.md#transaction-004) |
+| TRANSACTION-005 | [Verify independent commits and partial failure behavior](spring-boundaries-and-adapters.md#transaction-005) |
+| TRANSACTION-006 | [Account for Spring proxy transaction boundaries](spring-boundaries-and-adapters.md#transaction-006) |
+| EXTERNAL-001 | [Implement provider-independent Java contracts](spring-boundaries-and-adapters.md#external-001) |
+| EXTERNAL-002 | [Keep provider types inside adapters](spring-boundaries-and-adapters.md#external-002) |
+| EXTERNAL-003 | [Translate provider results into accurate business outcomes](spring-boundaries-and-adapters.md#external-003) |
+| EXTERNAL-004 | [Translate provider errors while preserving their causes](spring-boundaries-and-adapters.md#external-004) |
+| EXTERNAL-005 | [Set network timeouts explicitly](spring-boundaries-and-adapters.md#external-005) |
+| EXTERNAL-006 | [Retry only when failure and duplication semantics permit it](spring-boundaries-and-adapters.md#external-006) |
+| EXTERNAL-007 | [Expose external failures and approved fallback states](spring-boundaries-and-adapters.md#external-007) |
+| SCHEDULER-001 | [Keep schedulers focused on invoking use cases](spring-boundaries-and-adapters.md#scheduler-001) |
+| SCHEDULER-002 | [Configure schedules and establish one execution time](spring-boundaries-and-adapters.md#scheduler-002) |
+| SCHEDULER-003 | [Define behavior for duplicate execution](spring-boundaries-and-adapters.md#scheduler-003) |
+| BATCH-001 | [Separate Spring Batch responsibilities](spring-boundaries-and-adapters.md#batch-001) |
+| BATCH-002 | [Process large datasets in manageable units](spring-boundaries-and-adapters.md#batch-002) |
+| BATCH-003 | [Use stable job names and explicit execution parameters](spring-boundaries-and-adapters.md#batch-003) |
+| BATCH-004 | [Define retry, skip, restart, and partial failure behavior](spring-boundaries-and-adapters.md#batch-004) |
 
-## Use Cases, Spring, external boundaries, and operational entry points
+## Exception, Logging, Configuration, and Documentation Rules
 
-| ID | Strength | Summary | Details |
-|---|---|---|---|
-| USECASE-001 | SHOULD | Define a Use Case interface for a real Application entry boundary even with one implementation. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| USECASE-002 | MUST | Make a Use Case orchestrate the business flow and boundary calls without reimplementing Domain rules. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| USECASE-003 | SHOULD NOT | Do not create a formal interface or Base class for a helper with no real boundary. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| USECASE-004 | MUST | Inject Spring dependencies through constructors. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| TRANSACTION-001 | MUST | Make the public Application Use Case entry point own the business transaction. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| TRANSACTION-002 | MUST | Use `readOnly = true` only for a genuinely read-only Use Case. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| TRANSACTION-003 | MUST NOT | Do not put business transactions on Controller, Domain, mapper, provider Client, or Scheduler code. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| TRANSACTION-004 | SHOULD NOT | Do not hold a database transaction and lock during a slow external call. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| TRANSACTION-005 | MUST | Use `REQUIRES_NEW` and partial commits only after verifying independent-commit meaning and failure effects. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| TRANSACTION-006 | MUST | Do not expect self-invocation or a private method to create a new Spring transaction boundary. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| EXTERNAL-001 | MUST | Have the business owner define a provider-independent Port and reveal the provider in the implementation name. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| EXTERNAL-002 | MUST NOT | Do not expose provider SDKs, DTOs, errors, or authentication objects to the Domain or Application. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| EXTERNAL-003 | MUST | Translate a provider result accurately into its actual local business meaning. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| EXTERNAL-004 | MUST | Translate external errors into Port meaning while preserving the cause and a safe identifier. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| EXTERNAL-005 | MUST | Declare network timeouts explicitly. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| EXTERNAL-006 | MUST | Apply retries only after reviewing transience, idempotency, duplicate effects, and duplicate retry layers. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| EXTERNAL-007 | MUST | Express an authorized fallback as an explicit degraded result. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| SCHEDULER-001 | MUST | Keep a Scheduler as a thin entry point that builds Context and reference time and invokes a Use Case. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| SCHEDULER-002 | MUST | Declare cron, time zone, re-execution range, and one reference time per execution. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| SCHEDULER-003 | SHOULD | Make idempotency and execution identity explicit when duplicate execution is possible. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| BATCH-001 | MUST | Separate Job, Step, Reader, Processor, and Writer responsibilities. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| BATCH-002 | MUST | Use Chunk, paging, cursor, or another scale-appropriate strategy for large processing. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| BATCH-003 | MUST | Use stable business Job and Step names and explicit parameters. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
-| BATCH-004 | MUST | Define the meaning of retry, skip, restart, partial failure, and duplicate effects. | [Spring boundaries and adapters](spring-boundaries-and-adapters.md) |
+| ID | Rule section |
+|---|---|
+| EXCEPTION-001 | [Represent failures according to their owning layer](errors-logging-and-configuration.md#exception-001) |
+| EXCEPTION-002 | [Choose exception types according to recovery needs](errors-logging-and-configuration.md#exception-002) |
+| EXCEPTION-003 | [Keep external contracts out of domain exceptions](errors-logging-and-configuration.md#exception-003) |
+| EXCEPTION-004 | [Name exceptions after concrete business failures](errors-logging-and-configuration.md#exception-004) |
+| EXCEPTION-006 | [Handle failures meaningfully and preserve their causes](errors-logging-and-configuration.md#exception-006) |
+| EXCEPTION-007 | [Limit broad catches to process boundaries](errors-logging-and-configuration.md#exception-007) |
+| EXCEPTION-008 | [Expose stable error codes rather than internal messages](errors-logging-and-configuration.md#exception-008) |
+| EXCEPTION-005 | [Translate business exceptions for each HTTP API](errors-logging-and-configuration.md#exception-005) |
+| LOGGING-001 | [Use the established logger and parameterized messages](errors-logging-and-configuration.md#logging-001) |
+| LOGGING-002 | [Choose log levels by operational value](errors-logging-and-configuration.md#logging-002) |
+| LOGGING-003 | [Log each failure at one meaningful point](errors-logging-and-configuration.md#logging-003) |
+| LOGGING-004 | [Preserve stack traces when logging exceptions](errors-logging-and-configuration.md#logging-004) |
+| LOGGING-005 | [Keep logging frameworks out of a pure domain](errors-logging-and-configuration.md#logging-005) |
+| LOGGING-006 | [Protect secrets and personal data in logs](errors-logging-and-configuration.md#logging-006) |
+| LOGGING-007 | [Propagate correlation identifiers consistently](errors-logging-and-configuration.md#logging-007) |
+| COMMENT-001 | [Use consistent identifier and documentation languages](errors-logging-and-configuration.md#comment-001) |
+| COMMENT-002 | [Explain reasons and constraints in comments](errors-logging-and-configuration.md#comment-002) |
+| COMMENT-003 | [Document public contracts when names and types are insufficient](errors-logging-and-configuration.md#comment-003) |
+| COMMENT-004 | [Remove stale code and make TODOs actionable](errors-logging-and-configuration.md#comment-004) |
+| CONFIG-001 | [Group related settings in immutable configuration types](errors-logging-and-configuration.md#config-001) |
+| CONFIG-002 | [Validate required configuration at startup](errors-logging-and-configuration.md#config-002) |
+| CONFIG-003 | [Keep configuration focused on technical wiring](errors-logging-and-configuration.md#config-003) |
+| CONFIG-004 | [Declare dependencies instead of locating them globally](errors-logging-and-configuration.md#config-004) |
+| CONFIG-005 | [Select implementations at the configuration boundary](errors-logging-and-configuration.md#config-005) |
+| CONFIG-006 | [Avoid dangerous defaults and secret exposure](errors-logging-and-configuration.md#config-006) |
+| CONFIG-007 | [Separate environment settings from business rules](errors-logging-and-configuration.md#config-007) |
 
-## Exceptions, logging, configuration, and documentation
+## Testing and Verification Rules
 
-| ID | Strength | Summary | Details |
-|---|---|---|---|
-| EXCEPTION-001 | MUST | Separate Domain, Application, and Infrastructure failure meanings. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| EXCEPTION-002 | SHOULD | Use Runtime Exception by default for business failure and checked exceptions only for a real recovery choice. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| EXCEPTION-003 | MUST NOT | Do not put HTTP, Spring, database, or provider contracts in a Domain Exception. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| EXCEPTION-004 | MUST | Use concrete business names and a shallow domain-specific hierarchy only when needed. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| EXCEPTION-005 | SHOULD | Have API-specific Handlers translate the same business exception into the applicable external contract. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| EXCEPTION-006 | MUST | Do not swallow exceptions, and preserve the cause when translating them. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| EXCEPTION-007 | MUST | Limit broad catch clauses to the outermost process boundary. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| EXCEPTION-008 | MUST | Use a stable error code for client branching and do not expose internal messages. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| LOGGING-001 | MUST | Use the project Logger and parameterized or structured logging. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| LOGGING-002 | SHOULD | Choose ERROR, WARN, INFO, or DEBUG according to operational value. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| LOGGING-003 | MUST NOT | Do not record and rethrow the same failure at several layers. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| LOGGING-004 | MUST | Pass the exception object as the final log argument. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| LOGGING-005 | MUST NOT | Do not make a pure Domain depend on a logging framework. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| LOGGING-006 | MUST NOT | Do not log secrets, tokens, sessions, personal data, or entire objects. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| LOGGING-007 | MUST | Propagate correlation identifiers consistently from the execution entry boundary. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| COMMENT-001 | MUST | Write identifiers in English and use the project's documentation language consistently. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| COMMENT-002 | MUST | Make comments explain rationale, constraints, compatibility, and reconsideration conditions. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| COMMENT-003 | SHOULD | Write JavaDoc only for non-obvious public contracts and business meaning. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| COMMENT-004 | MUST NOT | Do not leave commented-out historical code or a context-free TODO. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| CONFIG-001 | SHOULD | Group related settings in immutable `ConfigurationProperties`. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| CONFIG-002 | MUST | Validate required settings and safe ranges at startup. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| CONFIG-003 | MUST | Limit Config to Bean wiring and technical implementation selection. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| CONFIG-004 | MUST NOT | Do not use a service locator or static ApplicationContext access. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| CONFIG-005 | MUST | Keep profile and implementation selection at the Config boundary, not in a business Service. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| CONFIG-006 | MUST NOT | Do not use dangerous defaults, automatic `toString`, or whole-object logging for secrets and production endpoints. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
-| CONFIG-007 | MUST | Separate ownership of environment values from immutable business rules. | [Errors, logging, and configuration](errors-logging-and-configuration.md) |
+| ID | Rule section |
+|---|---|
+| TEST-001 | [Follow existing testing tools and conventions](testing-and-verification.md#test-001) |
+| TEST-002 | [Test observable business behavior](testing-and-verification.md#test-002) |
+| TEST-005 | [Verify interactions when side effects are the contract](testing-and-verification.md#test-005) |
+| TEST-008 | [Prioritize important behavior over coverage numbers](testing-and-verification.md#test-008) |
+| TEST-003 | [Test each responsibility at its owning layer](testing-and-verification.md#test-003) |
+| TEST-004 | [Use real domain objects and mock actual boundaries](testing-and-verification.md#test-004) |
+| TEST-006 | [Keep test fixtures from weakening production encapsulation](testing-and-verification.md#test-006) |
+| TEST-007 | [Make tests deterministic and independent](testing-and-verification.md#test-007) |
+| TEST-009 | [Use compatibility comparisons when replacing a system](testing-and-verification.md#test-009) |
+| TOOLING-001 | [Inspect the module's build and verification setup](testing-and-verification.md#tooling-001) |
+| TOOLING-002 | [Use project wrappers and established verification commands](testing-and-verification.md#tooling-002) |
+| TOOLING-003 | [Add verification tools only when requested](testing-and-verification.md#tooling-003) |
+| TOOLING-004 | [Check search results in their code context](testing-and-verification.md#tooling-004) |
+| TOOLING-005 | [Choose focused Java verification by risk](testing-and-verification.md#tooling-005) |
+| TOOLING-006 | [Keep suppressions narrow and justified](testing-and-verification.md#tooling-006) |
+| TOOLING-007 | [Change generator inputs instead of generated code](testing-and-verification.md#tooling-007) |
 
-## Testing, tooling, and change scope
+## Compatibility and Change-Scope Rules
 
-| ID | Strength | Summary | Details |
-|---|---|---|---|
-| TEST-001 | MUST | Follow the project's existing test tools, naming, and fixture conventions. | [Testing and verification](testing-and-verification.md) |
-| TEST-002 | MUST | Verify observable business behavior rather than implementation details. | [Testing and verification](testing-and-verification.md) |
-| TEST-003 | MUST | Test each responsibility at the layer that owns it. | [Testing and verification](testing-and-verification.md) |
-| TEST-004 | MUST NOT | Do not mock Domain objects, Value Objects, or DTOs. | [Testing and verification](testing-and-verification.md) |
-| TEST-005 | SHOULD | Verify interactions only when the side effect itself is the contract. | [Testing and verification](testing-and-verification.md) |
-| TEST-006 | MUST | Do not weaken production encapsulation for test convenience. | [Testing and verification](testing-and-verification.md) |
-| TEST-007 | MUST | Control time, identifiers, asynchronous behavior, and data deterministically and independently. | [Testing and verification](testing-and-verification.md) |
-| TEST-008 | SHOULD | Prioritize important branches and contracts, and avoid tests written only to increase coverage. | [Testing and verification](testing-and-verification.md) |
-| TEST-009 | MAY | Use Characterization, Golden Master, and Differential Tests for system-replacement work. | [Testing and verification](testing-and-verification.md) |
-| TOOLING-001 | MUST | First inspect the target module's build, formatter, static analysis, CI, and generation settings. | [Testing and verification](testing-and-verification.md) |
-| TOOLING-002 | MUST | Prefer the project wrapper and established verification commands. | [Testing and verification](testing-and-verification.md) |
-| TOOLING-003 | MUST NOT | Do not add a new static-analysis, coverage, or architecture-checking tool to the build without a request. | [Testing and verification](testing-and-verification.md) |
-| TOOLING-004 | MUST | Treat search results as candidates and decide violations from context and types. | [Testing and verification](testing-and-verification.md) |
-| TOOLING-005 | MUST | Choose verification according to risk and classify failure causes. | [Testing and verification](testing-and-verification.md) |
-| TOOLING-006 | MUST | Apply a suppression at the narrowest scope with a rationale and reconsideration condition. | [Testing and verification](testing-and-verification.md) |
-| TOOLING-007 | MUST NOT | Do not edit generated code directly. | [Testing and verification](testing-and-verification.md) |
-| COMPATIBILITY-001 | MUST | Resolve conflicts in the order of user behavior, external contracts, project rules, integrity, and security. | [Compatibility and change scope](compatibility-and-change-scope.md) |
-| COMPATIBILITY-002 | MUST | Do not change existing API, data, configuration, Bean, Job, or package contracts without an explicit request. | [Compatibility and change scope](compatibility-and-change-scope.md) |
-| COMPATIBILITY-003 | MUST | Isolate a general-rule exception narrowly and track its rationale, scope, verification, and reconsideration condition. | [Compatibility and change scope](compatibility-and-change-scope.md) |
-| COMPATIBILITY-004 | MUST | Do not silently reproduce a security vulnerability or data-loss risk. | [Compatibility and change scope](compatibility-and-change-scope.md) |
-| COMPATIBILITY-005 | MUST | Limit changes to the requested scope and directly related refactoring. | [Compatibility and change scope](compatibility-and-change-scope.md) |
-| COMPATIBILITY-006 | MUST NOT | Do not mass-fix unrelated legacy violations or add new features, dependencies, or structures. | [Compatibility and change scope](compatibility-and-change-scope.md) |
-| COMPATIBILITY-007 | MUST | Do not interpret a review request as authorization to modify files. | [Compatibility and change scope](compatibility-and-change-scope.md) |
-| COMPATIBILITY-008 | MUST | Include outcomes, decisions, verification, exceptions, and verification gaps in completion reporting. | [Compatibility and change scope](compatibility-and-change-scope.md) |
+| ID | Rule section |
+|---|---|
+| COMPATIBILITY-001 | [Resolve Java rule conflicts from explicit contracts](compatibility-and-change-scope.md#compatibility-001) |
+| COMPATIBILITY-002 | [Preserve public and operational contracts](compatibility-and-change-scope.md#compatibility-002) |
+| COMPATIBILITY-004 | [Address security and data-loss risks explicitly](compatibility-and-change-scope.md#compatibility-004) |
+| COMPATIBILITY-003 | [Keep compatibility exceptions narrow and traceable](compatibility-and-change-scope.md#compatibility-003) |
+| COMPATIBILITY-005 | [Limit refactoring to the requested work](compatibility-and-change-scope.md#compatibility-005) |
+| COMPATIBILITY-006 | [Avoid unrelated cleanup and unrequested features](compatibility-and-change-scope.md#compatibility-006) |
+| COMPATIBILITY-007 | [Keep reviews read-only unless changes are authorized](compatibility-and-change-scope.md#compatibility-007) |
+| COMPATIBILITY-008 | [Report outcomes, verification, and remaining gaps](compatibility-and-change-scope.md#compatibility-008) |

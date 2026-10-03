@@ -39,7 +39,54 @@ com.example.shop
 
 Keep the module's public surface small. If Spring Modulith is used, its default package model treats the application module's base package as its API and subpackages as internal. Place only deliberate public types at the base or expose a named interface explicitly.
 
-Do not add every possible layer folder. A small module may expose one facade and keep a domain model plus one adapter without extra ceremony.
+A small module may expose one facade and keep a domain model plus one adapter without extra ceremony. The following role-oriented layout is equally valid when it matches the project's vocabulary.
+
+## Role-Oriented Business Packages
+
+Use controller, service, repository, and external when those are the project's role names. Do not add presentation, application, or infrastructure as competing synonyms inside the same capability.
+
+~~~text
+<business-capability>/
+├── controller/
+│   └── model/             # HTTP contracts
+├── service/
+│   └── model/             # application inputs and results
+├── repository/
+│   ├── ForecastRepository.java       # public persistence contract
+│   ├── model/                         # public persistence inputs/results
+│   └── jpa/
+│       ├── JpaForecastRepository.java
+│       ├── ForecastSpringDataRepository.java
+│       └── model/                     # JPA mappings and internal query rows
+├── external/
+│   ├── model/             # provider-independent contract data
+│   └── <provider>/
+│       └── model/         # provider wire data
+├── domain/                # actual business objects and rules, when needed
+├── scheduler/
+├── batch/
+└── config/
+~~~
+
+The repository example has a public interface and one JPA implementation. Add the Spring Data interface only when Spring Data supplies actual database access. This does not require another Adapter, Mapper, or forwarding Service.
+
+Each directory owns the role named by the tree. Create only roles used by the capability. A simple CRUD capability need not have a duplicate domain object for each JPA mapping. Preserve explicitly required package documentation without filling empty roles with unused code.
+
+The allowed source edges are:
+
+~~~text
+controller / scheduler / batch → service and its public model
+service → repository contract and model / external contract and model / domain
+repository.jpa → repository contract and model / repository.jpa.model
+external.<provider> → external contract and model / its own provider model
+business config → locally owned contracts and implementations
+~~~
+
+The service does not import repository.jpa or a concrete external provider. Public model factories must also obey this rule: repository/model cannot take repository/jpa/model as an input type.
+
+If client is the established integration name, apply the same layout to client/model and client/<provider>/model. Other business modules use a deliberately published application surface, not this capability's internal repository.
+
+For Spring Modulith, align this layout with the configured module discovery and NamedInterface metadata. Java public visibility or the repository folder name does not automatically publish a cross-module API.
 
 ## Map Familiar Spring Names to Roles
 
@@ -47,7 +94,8 @@ Do not add every possible layer folder. A small module may expose one facade and
 |---|---|
 | controller | inbound Presentation adapter |
 | application service or use case | Application orchestration |
-| entity, aggregate, value object | Domain behavior and invariants |
+| pure business object, aggregate, value object | Domain behavior and invariants |
+| JPA entity | persistence implementation model |
 | repository interface | inward-required persistence port |
 | Spring Data repository or repository implementation | Infrastructure adapter |
 | event listener | inbound adapter or cross-module integration adapter |
@@ -58,28 +106,31 @@ The package name service does not establish whether code is Application or Domai
 
 ## Keep the Domain Inward
 
-- Do not pass HttpServletRequest, ResponseEntity, Spring MVC types, message records, or database rows into Domain.
-- Convert controller input into validated application or domain types at the edge.
-- Keep business rules on entities, value objects, domain services, or policies rather than controllers and Spring configuration.
-- Define repository and gateway contracts inward when they protect a boundary.
-- Implement them with Spring Data, JDBC, JPA, messaging, or third-party SDKs in Infrastructure.
-- Avoid duplicate domain and persistence models when they add no boundary value, but do not leak a volatile ORM mapping into a domain that is intended to stay framework-independent.
+Keep pure business types under the domain owner and ORM records under the persistence implementation. Service contracts use their own models and repository public models; they do not expose JPA mappings, QueryDSL Q-types, or provider SDK types.
 
-Follow the existing transaction strategy. A transaction should protect one context's invariant boundary; do not use a broad transaction as a substitute for explicit context integration.
+Domain packages do not import Spring MVC, Jakarta Persistence, database clients, provider implementations, or composition. Business rules belong with domain objects, while a storage-only capability can use its service and repository contracts without manufacturing domain types.
+
+Preserve the transaction boundary and domain behavior while moving packages. A directory move does not authorize a different commit boundary or distributed consistency model.
 
 ## Composition and Configuration
 
-Keep these near ShopApplication or a bootstrap/config package:
+Assign Spring configuration to the narrowest owner:
 
-- concrete bean wiring
-- environment property binding and validation
-- top-level security filter chains
-- root web or messaging configuration
-- global serialization and error conversion
+| Owner | Examples | Placement |
+|---|---|---|
+| Business capability | local bean selection, business-specific properties | business config |
+| Shared technical capability | DataSource and QueryDSL beans, security filters, MVC/Jackson setup, scheduler engine, tracing | technical capability's config |
+| Final application composition | process startup and wiring across owners | near the application class or bootstrap/config |
+
+For a project with a platform package, platform.persistence.config can own shared persistence setup while each business repository owns its entities and queries. platform.auth.config can own authentication transport wiring while account policies and resource authorization remain business-owned. Names and the set of technical capabilities follow actual responsibilities.
+
+A small application without distinct technical modules may keep these beans near its application class. Do not introduce platform merely to match the example. Preserve a documented restriction on root config dependencies when business wiring is local; do not impose that restriction on projects whose root composition assembles business adapters.
 
 Keep context-specific properties and mapping with the owning context. Expose a typed configuration value to Domain or Application rather than letting inner code read Environment or global property objects directly.
 
 Do not use ComponentScan expansion to erase module boundaries.
+
+Administrative controllers may have their own entry package while calling the owning business service. Create a separate administrative business boundary only when its own model, such as operator identity, warrants it. Keep translation for a required existing HTTP or database contract under its actual owner; do not introduce a compatibility package without a separate responsibility.
 
 ## Data and Migrations
 
@@ -120,7 +171,7 @@ ApplicationModules verification can check:
 - access to another module through its API rather than internals
 - explicitly allowed dependencies when declared
 
-Add a focused test around ApplicationModules.of(...).verify() when Spring Modulith is used. Keep allowedDependencies consistent with the ModuleContract.
+Use the project's existing ApplicationModules.of(...).verify() check when present. Add focused coverage only for a changed boundary that it does not already verify. Keep allowedDependencies consistent with the ModuleContract.
 
 ### Module Tests
 
@@ -167,4 +218,3 @@ After moving Spring components, verify component scanning, bean ambiguity, entit
 - [Spring Modulith verification](https://docs.spring.io/spring-modulith/reference/verification.html)
 - [Spring Modulith module testing](https://docs.spring.io/spring-modulith/reference/testing.html)
 - [Spring Modulith runtime support](https://docs.spring.io/spring-modulith/reference/runtime.html)
-

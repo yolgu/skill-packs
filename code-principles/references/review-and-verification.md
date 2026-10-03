@@ -85,7 +85,8 @@ has not changed.
 - Prefer the project's official wrapper, formatter, linter, type checker, compiler, test runner, and
   integration commands.
 - Treat explicit project commands as the minimum baseline rather than optional suggestions.
-- Start with focused checks for fast feedback, then run the required broader checks.
+- Run the narrowest checks covering the changed contract and plausible regressions. Broaden only for an identified unverified risk or an explicitly required check; do not run the full suite by default.
+- Do not rerun a passing check unless relevant code, configuration, dependencies, environment, or inputs changed.
 - Inspect exit status, reported errors, failed tests, and meaningful warnings before declaring success.
 - Do not skip a baseline check because the file is small, appears temporary, or seems low risk.
 - Add focused checks for the most consequential failure mode when the baseline does not cover it.

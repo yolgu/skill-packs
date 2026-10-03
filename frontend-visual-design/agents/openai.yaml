@@ -1,0 +1,5 @@
+interface:
+  display_name: "Frontend Visual Design"
+  short_description: "Web and Flutter visual design with rendered QA"
+  default_prompt: "Use $frontend-visual-design to improve the requested interface while preserving the project's design authority, then verify changed visual states on the real rendered target."
+

@@ -10,37 +10,52 @@
 
 ## Boundary models
 
-### DTO-001 — MUST
+<a id="dto-001"></a>
+### Separate HTTP request and response types
+
+**DTO-001 · MUST**
 
 Represent HTTP input as `...Request` and output as `...Response`; do not share one type in both directions. The two contracts differ in validation, exposed fields, security, and change cadence. Do not share provider DTOs with local HTTP DTOs.
 
-### DTO-002 — MUST
+<a id="dto-002"></a>
+### Use consistent application input and result types
 
-Use this flow by default for a new application boundary:
+**DTO-002 · MUST**
 
-```text
-ExportMembersRequest
-→ ExportMembersCommand
-→ ExportMembersUseCase
-→ ExportMembersResult
-→ ExportMembersResponse
-```
+Use ...Request and ...Response for HTTP input and output. Use ...RequestDto and ...ResultDto for new service and public repository inputs and outputs:
 
-If the existing project consistently uses `RequestDto/ResultDto`, retain that convention. Do not mix `Command/Result` and `RequestDto/ResultDto` arbitrarily within one application boundary. Distinguish state-changing intent as a Command and lookup criteria as a Query.
+~~~text
+ExportMembersRequest.toDto()
+→ ExportMembersRequestDto
+→ ExportMembersService
+→ ExportMembersResultDto
+→ ExportMembersResponse.from(result)
+~~~
 
-### DTO-003 — SHOULD NOT
+Name models for the operation or data they describe. A collection result and a repository row result can have different business prefixes. Keep existing external Java signatures compatible when required; do not mix Command/Query/Result and RequestDto/ResultDto arbitrarily within the same new boundary.
+
+Business values and provider wire models retain names that describe their own meaning.
+
+<a id="dto-003"></a>
+### Separate DTOs when their contracts differ
+
+**DTO-003 · SHOULD NOT**
 
 Do not mechanically duplicate identical-field types to match the number of layers. Separate boundary types when at least one of the following materially differs:
 
+- Public contract ownership and consumers
 - External and internal contracts
 - Validation responsibilities
 - Exposed fields and personal-data boundaries
 - Business meaning
 - Change cadence
 
-For simple transfer within one layer, an existing explicit type may be reused. Separation among ORM, provider, and HTTP contracts remains valuable even when their fields happen to match.
+Each layer owns its public input and output contracts. Equal fields do not erase different ownership or consumers. Reuse an existing explicit type for internal calls that do not introduce a new contract. Keep ORM, provider, and HTTP representations distinct.
 
-### DTO-006 — SHOULD
+<a id="dto-006"></a>
+### Prefer immutable constructor binding for HTTP requests
+
+**DTO-006 · SHOULD**
 
 Use a regular class with immutable constructor binding as the default for a new HTTP Request. Verify whether the project's ObjectMapper and compiler reliably discover constructor parameter names; declare `@JsonCreator` and `@JsonProperty` only when required.
 
@@ -58,8 +73,8 @@ public class ExportMembersRequest {
         this.cityCode = cityCode;
     }
 
-    public ExportMembersCommand toCommand() {
-        return ExportMembersCommand.of(cityCode);
+    public ExportMembersRequestDto toDto() {
+        return ExportMembersRequestDto.of(cityCode);
     }
 }
 ```
@@ -68,36 +83,45 @@ When existing field binding depends on private mutable fields and a restricted n
 
 ## Conversions
 
-### DTO-004 — MUST
+<a id="dto-004"></a>
+### Distinguish conversion from object construction
 
-Keep conversion and construction naming semantics fixed.
+**DTO-004 · MUST**
 
-- `toXxx()`: convert the current object to a specified target type
-- `from(source)`: construct from one primary source
-- `of(values...)`: combine prepared values
-- `create/issue/register`: apply new business-object rules
-- `restore`: reconstruct persisted state
+- of(values...): create an object from prepared values.
+- from(source): translate a different representation into this type.
+- toDto(): translate this object to one contextually unambiguous DTO.
+- toXxx(): name the target explicitly when more than one conversion is possible.
+- create, issue, register: express new business-object creation when it has that meaning.
+- restore: reconstruct business state when that operation differs from new creation.
 
-Use `toDto()` only when there is one contextually unambiguous target. When multiple targets exist, use a specific name such as `toExportCommand()`.
+Choose of and from by meaning, not argument count. A one-value of is valid. A static factory's source parameter still creates a type dependency.
 
-### DTO-005 — SHOULD
+<a id="dto-005"></a>
+### Keep mappings explicit and free of business decisions
 
-Use explicit manual field mapping by default for a small conversion. Use MapStruct only when the project already adopts it, fields are numerous, mechanical mappings repeat, and the build can detect omissions.
+**DTO-005 · SHOULD**
 
-Do not put the following in a mapper:
+Use direct field mapping, constructors, or short conversion methods for small models. Extract a Mapper only when conversion has a distinct responsibility or real duplication. Use MapStruct for substantial repeated mechanical mappings when already supported by the project and the build reports unmapped fields.
 
-- Authorization decisions
-- Domain state transitions
-- Repository lookups
-- Provider calls
-- Current-time or identifier generation
-- Business default decisions
+| Conversion | Java owner |
+|---|---|
+| HTTP request to service input | Request.toDto() |
+| Service result to HTTP response | Response.from(serviceResult) |
+| Repository result to service result | service ResultDto.from(repositoryResult) |
+| JPA Entity to or from repository data | repository implementation |
+| Provider response to integration result | provider implementation |
 
-Do not use reflection-based bean copying or a global `CommonMapper`.
+A public repository DTO must not declare from(JpaEntity). The implementation reads Entity fields and constructs the DTO from values. A JPA Entity must not interpret a DTO in update(dto), from(dto), or a similar method.
+
+Keep authorization, business state transitions, repository lookups, provider calls, clock/identifier generation, and business defaults out of conversion code. Do not use reflection-based bean copying or a global CommonMapper.
 
 ## Controller
 
-### CONTROLLER-001 — MUST
+<a id="controller-001"></a>
+### Keep controllers focused on HTTP and use case invocation
+
+**CONTROLLER-001 · MUST**
 
 Limit a Controller to this flow:
 
@@ -110,11 +134,17 @@ Limit a Controller to this flow:
 
 Do not put Repository access, JPA Entity manipulation, QueryDSL, SQL, transaction control, business authorization conditions, domain state transitions, provider SDK calls, or JSON Map assembly in a Controller. Do not translate business exceptions to HTTP errors with per-controller `try/catch`; use the appropriate Handler.
 
-### CONTROLLER-002 — MUST NOT
+<a id="controller-002"></a>
+### Convert framework context before entering inner layers
+
+**CONTROLLER-002 · MUST NOT**
 
 Do not pass `HttpServletRequest`, `HttpServletResponse`, `HttpSession`, or Spring `Authentication` into the Application or Domain. Convert only the required actor, organization, city, language, request channel, and correlation data to an explicit Context type.
 
-### CONTROLLER-003 — SHOULD
+<a id="controller-003"></a>
+### Use ResponseEntity when HTTP control is needed
+
+**CONTROLLER-003 · SHOULD**
 
 Return a Response DTO directly when the successful status and body are fixed. Use `ResponseEntity` when actual HTTP control is required, such as:
 
@@ -125,7 +155,10 @@ Return a Response DTO directly when the successful status and body are fixed. Us
 
 If the project consistently uses `ResponseEntity` for every Controller, preserve that established convention.
 
-### CONTROLLER-004 — MUST NOT
+<a id="controller-004"></a>
+### Return only dedicated API response types
+
+**CONTROLLER-004 · MUST NOT**
 
 Do not return any of the following directly as a Controller Response:
 
@@ -137,17 +170,26 @@ Do not return any of the following directly as a Controller Response:
 
 Define a Response containing only fields allowed for the external consumer.
 
-### CONTROLLER-005 — MUST
+<a id="controller-005"></a>
+### Enforce business authorization in the use case
+
+**CONTROLLER-005 · MUST**
 
 Use Controller security annotations only for technical boundaries such as authenticated access. Do not encode role codes, specific account identifiers, city, language, ownership, or target-state conditions in SpEL or a custom annotation DSL. The Application Use Case must enforce actual business authorization by invoking a domain-specific authorization policy.
 
 ## JSON contracts
 
-### JSON-001 — MUST
+<a id="json-001"></a>
+### Identify the actual JSON contract
+
+**JSON-001 · MUST**
 
 For an existing API, trace actual JSON, Controller contract tests, OpenAPI, client usage, the global ObjectMapper, and custom serializers together to identify the contract's single source of truth. When documentation and runtime behavior differ, first verify the observable runtime contract and its consumers.
 
-### JSON-002 — MUST
+<a id="json-002"></a>
+### Preserve existing JSON and HTTP behavior
+
+**JSON-002 · MUST**
 
 Do not change the following solely as a code-style modification:
 
@@ -161,19 +203,31 @@ Do not change the following solely as a code-style modification:
 
 When an external name is fixed, preserve it with `@JsonProperty` even if the Java name improves, and verify it with a contract test. Do not bind an external contract implicitly to an enum's `name()` or `ordinal()`.
 
-### JSON-003 — SHOULD
+<a id="json-003"></a>
+### Use Jackson annotations for real contract differences
+
+**JSON-003 · SHOULD**
 
 Use `@JsonInclude`, `@JsonIgnoreProperties`, `@JsonProperty`, and custom serializers or deserializers only when they express real contract semantics. Do not apply `NON_NULL` to every Response or `ignoreUnknown = true` to every Request. Assign clear ownership of date format and time zone to global configuration, a specific field, or a serializer.
 
-### JSON-004 — MUST NOT
+<a id="json-004"></a>
+### Reuse configured mappers and existing response conventions
+
+**JSON-004 · MUST NOT**
 
 Do not create `new ObjectMapper()` in each class. Use the project-configured mapper. When a provider has a different contract, its adapter may own dedicated configuration. Do not impose a universal response wrapper or remove an existing wrapper solely for style.
 
-### JSON-005 — MUST NOT
+<a id="json-005"></a>
+### Keep entity serialization out of API contracts
+
+**JSON-005 · MUST NOT**
 
 Do not serialize JPA or Domain Entities directly and then force the API contract to fit through `@JsonIgnore`, lazy-loading modules, or cyclic-reference annotations. Create a Response that contains only allowed fields from the beginning. Do not perform Repository lookup, authorization, external calls, or state changes inside a serializer.
 
-### JSON-006 — MUST
+<a id="json-006"></a>
+### Restrict polymorphic deserialization to permitted types
+
+**JSON-006 · MUST**
 
 Do not use Jackson Default Typing or open polymorphic deserialization based on internal implementation class names. When a real polymorphic contract exists, declare the permitted discriminator and type set explicitly, and verify unknown-type handling with contract tests.
 

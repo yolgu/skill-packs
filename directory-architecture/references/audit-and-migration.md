@@ -222,7 +222,7 @@ Prefer a slice that:
 5. Move presentation entry points or delegate framework-owned entries.
 6. Assign data, migrations, settings, routes, and events to the owner.
 7. Repair imports, exports, DI, routing, build metadata, and tests.
-8. Add or update a boundary check.
+8. Update an existing boundary check when the move changes its contract; add one only for an identified gap that warrants lasting coverage.
 9. Run focused verification.
 10. Remove the obsolete path only after consumers are migrated.
 

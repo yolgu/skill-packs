@@ -1,167 +1,87 @@
-# Object, Method, Naming, and Package Rules
+# Java Methods, Access, and Names
 
-## Table of contents
+This reference owns Java expression and naming conventions. Package layout and general responsibility principles are outside its scope.
 
-- [Responsibilities and flow](#responsibilities-and-flow)
-- [Method expression](#method-expression)
-- [Encapsulation and reuse](#encapsulation-and-reuse)
-- [Naming vocabulary](#naming-vocabulary)
-- [Package consistency](#package-consistency)
+## Java expression
 
-## Responsibilities and flow
+<a id="object-005"></a>
+### Choose streams or loops for readability
 
-### OBJECT-001 — MUST
+**OBJECT-005 · SHOULD**
 
-Give each class one cohesive business capability and one clear reason to change. Do not limit the number of methods mechanically; determine whether the methods share the same responsibility and reason to change. Do not mix Controller, Repository, external Client, and domain decisions in one service.
+Use streams for direct mapping, filtering, and aggregation. Use a loop for early exit, complex accumulation, ordered side effects, or exception handling. Extract an explicitly typed local when a stream chain hides intermediate meaning.
 
-### OBJECT-002 — SHOULD
+<a id="object-007"></a>
+### Use explicit Java contract types
 
-Make an application flow read in this order where practical:
+**OBJECT-007 · MUST NOT**
 
-1. Validate input and work context
-2. Load the required objects
-3. Verify authorization and execution preconditions
-4. Execute domain behavior
-5. Persist state
-6. Deliver follow-up effects
-7. Return an explicit result
+Do not expose Map<String, Object>, Object[], raw collections, or an unmeaningful Object in business or application signatures. Convert untyped external values in the implementation that reads them. Use typed DTOs, business types, enums, collections, and explicit absence or failure contracts.
 
-Use mixed abstraction levels, long conditionals, hidden side effects, independently testable decisions, or interleaved database, external-call, and Response-conversion logic as stronger extraction signals than line count.
+<a id="object-008"></a>
+### Use Java access levels deliberately
 
-### OBJECT-003 — SHOULD
+**OBJECT-008 · SHOULD**
 
-Use a guard clause when it exposes a failure condition first and reduces nesting. Do not mechanically require early returns or a single return point in every method.
+Use the narrowest Java access compatible with callers and framework discovery. Use package-private implementations where practical. A public type needed by another internal package is not automatically a published application API.
 
-```java
-public void redeem(
-    final MemberId memberId,
-    final LocalDateTime redeemedAt
-) {
-    if (status != CouponStatus.ISSUED) {
-        throw new CouponNotRedeemableException(id, status);
-    }
+Do not make production members public only for tests. Do not mechanically mark every class final; distinguish an immutable value class from a Spring component whose proxying may depend on subclassing.
 
-    if (expirationPeriod.isExpiredAt(redeemedAt)) {
-        throw new CouponExpiredException(id);
-    }
+## Naming
 
-    completeRedemption(memberId, redeemedAt);
-}
-```
+<a id="naming-001"></a>
+### Use English business identifiers
 
-## Method expression
+**NAMING-001 · MUST**
 
-### OBJECT-004 — SHOULD NOT
+Write Java class, method, variable, package, and enum identifiers in English using the established business vocabulary. Use the same glossary term for the same concept instead of phonetic transliterations or several synonyms.
 
-Do not use a Boolean flag that changes method behavior. Express the choice through a distinct verb or a meaningful business type.
+<a id="naming-002"></a>
+### Name Java implementation roles
 
-```java
-// Avoid.
-exportMembers(command, true);
+**NAMING-002 · SHOULD**
 
-// Reveal the intent.
-exportMemberSummary(command);
-exportMembers(command, MemberExportFormat.FULL);
-```
-
-Distinguish a real Boolean domain attribute from a flag that selects an execution path. When several values form one business concept, group them into a Value Object or Command, but do not create a meaningless `Data` or `Context` type solely to reduce parameter count.
-
-### OBJECT-005 — SHOULD
-
-Use streams for straightforward transformations, filtering, and aggregation. Use an explicit loop for early termination, complex state accumulation, multiple side effects, exception handling, or ordered business meaning. Prefer a readable business sequence over a shorter functional expression.
-
-### OBJECT-006 — MUST
-
-Make the primary side effects predictable from the method name. A method that reads like a lookup or question, such as `find`, `get`, `calculate`, or `can`, must not change externally observable state. A Command may return a generated identifier or change result; do not require every Command to return `void`.
-
-### OBJECT-007 — MUST NOT
-
-Do not use `Map<String, Object>`, `Object[]`, raw collections, or an unmeaningful `Object` in a Domain or Application public contract. When unavoidable at an external boundary, convert it immediately in the adapter to a validated explicit type. Do not duplicate magic literals such as role codes, states, and retry limits, but do not create named constants for every contextually obvious number.
-
-## Encapsulation and reuse
-
-### OBJECT-008 — SHOULD
-
-- Use the narrowest required access level.
-- Do not make a private method public for testing.
-- Use package-private visibility for internal implementations that are not external contracts where appropriate.
-- Prefer composition over inheritance.
-- Do not create a Base or Abstract class without a stable, genuine subtype relationship.
-- Do not inherit solely to reuse common fields, a logger, a stored repository, or test fixtures.
-- Do not move code to `common`, `util`, or `helper` merely because it appears twice. Extract a named concept only when meaning, ownership, and reason to change are the same.
-- Do not mechanically make every class `final` solely because inheritance is not currently intended.
-
-## Naming vocabulary
-
-### NAMING-001 — MUST
-
-Write class, method, variable, package, and enum identifiers in English and make them reflect the business language directly. Avoid phonetic transliterations of non-English terms and vague names such as `data`, `item`, `process`, `executeData`, `doWork`, `handleInfo`, and `manage`.
-
-Good examples include `approveAdvertisement`, `redeemCoupon`, `reserveInventory`, `exportMembers`, and `calculateRefundAmount`. A short verb such as `Order.cancel()` is acceptable when the surrounding type already supplies the context.
-
-### NAMING-002 — SHOULD
-
-Use the following role suffixes when the project has no different established vocabulary.
-
-| Area | Names |
+| Role | Names |
 |---|---|
-| HTTP | `...Request`, `...Response`, `...Controller`, `...ApiExceptionHandler`, `...ArgumentResolver` |
-| Application | `...Command`, `...Query`, `...Result`, `...UseCase`, `...Service` |
-| Established Application DTO convention | `...RequestDto`, `...ResultDto`, `...Dto` |
-| Domain | Business noun, `...Id`, `...Status`, `...Action`, `...Policy`, `...Authorization`, `...Decision`, `...Event`, `...Calculator` |
-| Persistence | `...Repository`, `...QueryRepository`, `...SpringDataRepository`, `Jpa...RepositoryAdapter`, `QueryDsl...QueryRepository`, `...QueryRow`, `...JpaEntity`, `...PersistenceMapper` |
-| External | `...Port`, `{Provider}...Adapter`, `{Provider}...Client`, `{Provider}...ProviderRequest`, `{Provider}...ProviderResponse`, `{Provider}...Mapper` |
-| Configuration and Batch | `...Config`, `...Properties`, `...Scheduler`, `...Job`, `...Step`, `...Reader`, `...Processor`, `...Writer` |
+| HTTP components | ...Controller, ...ApiExceptionHandler, ...ArgumentResolver |
+| Application execution | ...Service; ...UseCase when an independent interface is needed |
+| Business model | Business noun, ...Id, ...Status, ...Policy, ...Decision, ...Event, ...Calculator |
+| Persistence contract | ...Repository, ...QueryRepository |
+| Persistence implementation | Jpa...Repository, ...SpringDataRepository, ...JpaEntity, ...QueryRow |
+| External implementation | Provider-prefixed Client or Adapter that describes its actual role |
+| Configuration and Batch | ...Config, ...Properties, ...Scheduler, ...Job, ...Step, ...Reader, ...Processor, ...Writer |
 
-Make `Port` mean a business contract, `Adapter` mean a provider implementation, and `Client` mean a raw protocol call.
+These names describe roles that exist, not a list of types to generate. Input and result type names are defined in [HTTP and DTO models](http-dto-and-json-style.md#boundary-models).
 
-### NAMING-003 — SHOULD NOT
+<a id="naming-003"></a>
+### Name implementations without breaking framework discovery
 
-- Do not use `Impl` when the implementation technology or role can be named directly.
-- Do not use `Manager` unless the type represents an actual framework concept or resource lifecycle manager.
-- Do not use `Helper`, `Utils`, or `Common` when they conceal a concrete responsibility.
-- Use `Handler` only when the handled subject is explicit, as with an Exception, Event, or Message.
-- Use `Processor` only for a genuine role such as a Spring Batch processor or an explicit pipeline stage.
+**NAMING-003 · SHOULD NOT**
 
-For example, prefer `CreateMemberService` to `MemberServiceImpl`, and `FcmNotificationDeliveryAdapter` to `FcmServiceImpl`.
+Prefer JpaForecastRepository over a role-free ForecastRepositoryImpl when the implementation technology is useful information. Preserve Impl or another configured suffix where Spring Data repository-fragment discovery requires it.
 
-### NAMING-004 — MUST
+Use Handler and Processor for actual framework or pipeline roles. A provider implementation need not be split into Adapter, Client, and Mapper merely to use every suffix.
 
-Align method names with their return and failure semantics.
+<a id="naming-004"></a>
+### Match Java method names to return and failure behavior
 
-- Lookup expected to exist: `get...`
-- Lookup that may be absent: `find...`
-- Existence: `exists...`, `has...`
-- Permission: `can...`, `isAllowed...`
-- Calculation: `calculate...`
-- Conversion: `to...`, `from`, `of`
-- New construction: `create...`, `issue...`, `register...`
-- Validation that fails on violation: `require...`, `ensure...`
-- State change: the actual business verb
+**NAMING-004 · MUST**
 
-Do not make `get` return `Optional`, or make `find` always throw a technical exception when the value is absent.
+- get...: return a value expected to exist; report its absence meaningfully.
+- find...: allow an ordinary absent result, commonly Optional<T>.
+- exists... or has...: answer an existence question.
+- can... or isAllowed...: inspect permission without changing state.
+- calculate...: return a calculation without an external mutation.
+- require... or ensure...: fail if the condition is not met.
+- Business mutation: use the operation's actual business verb on its business owner.
 
-### NAMING-005 — SHOULD
+Use [conversion names](http-dto-and-json-style.md#conversions) for object construction and representation changes. Do not make get return Optional or make find disguise ordinary absence as a technical failure.
 
-- Make a Boolean read as a state or question, such as `active`, `enabled`, `hasPermission`, `canRedeem`, or `shouldRetry`.
-- Do not use `flag`, `check`, or `statusYn` in the Domain. Convert legacy database Y/N values to a business Boolean or enum in the mapper.
-- Name collections to reveal plurality and key meaning, such as `members`, `authorizedCityCodes`, or `membersById`.
-- Standardize acronym casing within the project, such as `Api`, `Http`, `Url`, `Id`, `Dto`, `Jpa`, `Sql`, and `Fcm`.
+<a id="naming-005"></a>
+### Name Boolean values, collections, and acronyms
 
-## Package consistency
+**NAMING-005 · SHOULD**
 
-### PACKAGE-001 — MUST
+Use readable Boolean names such as active, enabled, hasPermission, and canRedeem. Interpret database Y/N encodings inside persistence code instead of carrying statusYn into a business model.
 
-Before placing code, determine whether the project establishes package-by-feature, package-by-layer, a multi-module structure, or a deliberate hybrid. Inspect the current directory, adjacent features, dependency direction, and test placement together.
-
-### PACKAGE-002 — MUST NOT
-
-Do not mix synonymous naming systems such as `controller/presentation`, `service/application`, or `repository/persistence` within the same feature scope. Use the vocabulary of the existing structure.
-
-### PACKAGE-003 — MUST NOT
-
-Do not impose a specific tree such as `presentation/application/infrastructure` or `controller/service/repository` as a universal answer under the label of code style. Do not broadly move existing packages or reselect the top-level architecture.
-
-### PACKAGE-004 — SHOULD
-
-When the project already uses business modules, place dedicated Config, SQL, Adapter, Scheduler, and Batch code near the owning business code. Do not hide business concepts under `common`, `util`, `helper`, `misc`, or `temp`. Place Scheduler and Batch code as execution entry points owned by the relevant business area, not as independent domain names.
+Use plural collection names and meaningful keys, such as members, authorizedCityCodes, and membersById. Use consistent acronym casing such as Api, Http, Url, Id, Dto, Jpa, Sql, and Fcm.

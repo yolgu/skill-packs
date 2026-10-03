@@ -1,0 +1,6 @@
+interface:
+  display_name: "Toolchain Preflight"
+  short_description: "실행 전 프로젝트 요구 버전과 실제 런타임 확인"
+  default_prompt: "Use $toolchain-preflight to check the required and active toolchain versions before running this build or test command."
+policy:
+  allow_implicit_invocation: true

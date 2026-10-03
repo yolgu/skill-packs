@@ -7,7 +7,7 @@ Verify the contract, not only the folder shape. Select the smallest reliable mec
 1. Inspect existing build, lint, test, and architecture-check configuration.
 2. Reuse the project's current package or module mechanism.
 3. Add focused rules to an existing tool when authorized.
-4. Add a lightweight architecture test when no current mechanism expresses the boundary.
+4. Use a focused one-time inspection when the boundary is not enforced. Add a durable architecture test only when an important recurring violation warrants it.
 5. Recommend a new dependency only when the rule is important, recurring, and cannot be checked reliably otherwise.
 
 Do not replace a project's test runner or build system for this task.
@@ -141,7 +141,7 @@ Determine the project's actual commands from manifests and CI. Run the narrowest
 6. broader test suite
 7. build or framework system check
 
-Repair failures caused by the authorized move and rerun the failed check. Do not rewrite unrelated failing tests.
+Select from this list rather than running it as a mandatory ladder. Run a broader scope only for an identified remaining risk or a project-required check; do not run the full suite by default. Do not repeat a passing command without relevant changed inputs. Repair failures caused by the authorized move and rerun the affected check.
 
 ## Adding Enforcement
 

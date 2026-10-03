@@ -19,14 +19,14 @@
   - [Treat Relevant Quality Attributes as Correctness](#treat-relevant-quality-attributes-as-correctness)
   - [Keep the Same Core Quality Baseline](#keep-the-same-core-quality-baseline)
   - [Change the Authoritative Source, Not Generated Output](#change-the-authoritative-source-not-generated-output)
-- [Default Practices](#default-practices)
+- [Resolve Competing Qualities](#resolve-competing-qualities)
 - [Contextual Decisions](#contextual-decisions)
 
 ## How to Use These Principles
 
-Use the core principles to protect qualities that every implementation needs. Use the default
-practices when no more specific guidance settles a choice. Resolve contextual decisions from the
-target project's explicit rules, language conventions, actual contracts, and established tools.
+Use the core principles to protect qualities that every implementation needs. Resolve syntax and
+tooling choices from explicit project rules, actual contracts, and established tools. Evaluate a
+repeated implementation pattern against responsibility and contract requirements before reusing it.
 
 Do not use these principles to force code into a uniform shape. Preserve their intent using the
 clearest native expression available in the target context.
@@ -110,7 +110,8 @@ about, test, retry, and operate.
 effects a call can produce?
 
 - Keep mutable state scoped to the smallest responsible owner and useful lifetime.
-- Change owned state through behavior that communicates intent.
+- Keep business decisions with their business owner. A data representation may use constructors and simple accessors; do not invent business methods for a storage or transfer object.
+- A lookup, question, or calculation must not hide an externally observable mutation. A command may return a meaningful result; mutation does not imply a void return.
 - Separate calculation from external effects when doing so makes the flow clearer.
 - Keep network, storage, filesystem, time, randomness, and process effects at identifiable boundaries.
 - Use immutability and pure computation when they improve clarity; do not treat them as mandatory
@@ -119,21 +120,33 @@ effects a call can produce?
 ### Make Public Contracts Precise
 
 **Principle.** Express public inputs, outputs, failure modes, optionality, semantic values, and major
-effects precisely enough that callers do not need to inspect the implementation.
+effects precisely enough that callers do not need to inspect the implementation. Keep names,
+interfaces, responses, and documentation consistent with the observable behavior consumers can
+rely on.
 
 **Why.** Precise contracts prevent accidental misuse and turn hidden assumptions into information
 that tools and humans can check.
 
-**Decision test.** What must a caller know to use this operation correctly and handle every expected
-outcome?
+**Decision test.** What would a consumer reasonably expect from this contract, and does the actual
+behavior fulfill that expectation in its scope, effects, completion timing, and failure outcomes?
 
+- Establish the intended contract from requirements and consumer expectations before evaluating
+  consistency.
 - Distinguish values that share a primitive representation but carry different meaning.
 - Expose nullability, optionality, partial success, units, formats, and state constraints when callers
   must handle them.
+- Base communicated capabilities and states on the rules that actually determine them. Use indirect
+  conditions only when they reliably represent the promised meaning.
+- Resolve mismatches against the intended contract. Do not rename or redescribe incorrect behavior
+  merely to make it appear consistent.
+- Preserve implementation freedom behind the contract. Expose internal details only when they affect
+  what consumers must know or can rely on.
 - Avoid leaking broad, shapeless containers beyond a boundary when a meaningful structure exists.
 - Follow the target context's type style except for the explicit Python and TypeScript declaration
   rule below.
 - Do not introduce wrapper types that add no validation, meaning, ownership, or contract clarity.
+- When behavior or its communicated meaning changes, check the affected contract and usages for
+  consistency while respecting compatibility and task scope.
 
 ### Make Python and TypeScript Declarations Explicit
 
@@ -212,26 +225,27 @@ jumping into implementation details?
 - Prefer intention and problem meaning over generic technical names.
 - Keep a unit focused on one coherent purpose rather than a fixed line-count limit.
 - Reduce deep nesting, hidden mode flags, and implicit call-order requirements.
+- Use guard clauses when they expose failure conditions and reduce nesting. Choose clear operation names or semantic alternatives for execution modes; a genuine Boolean data attribute is not a mode flag.
 - Use comments for external constraints, compatibility reasons, trade-offs, and non-obvious risks.
 - Do not comment what the code already states clearly.
 
 ### Protect Real Change Boundaries
 
-**Principle.** Isolate responsibilities that have different owners or reasons to change, without
-imposing ceremonial layers.
+A consumer uses a provider's published contract. These are relative roles: an object can provide one capability and consume another. Choose the contract in terms of the consumer's task, without exposing the provider's private representation.
 
-**Why.** Useful boundaries contain volatility and hide implementation details. Formal pass-through
-layers increase navigation cost without reducing meaningful coupling.
+Trace static dependencies separately from runtime calls. A reference in a field, parameter, return type, generic argument, annotation, inheritance clause, or conversion method is a source dependency even if the method is static. Runtime delegation through an interface does not require the consumer to import the implementation.
 
-**Decision test.** Which implementation detail or independent reason to change does this boundary
-protect?
+Ask which implementation detail or independent reason to change the boundary protects:
 
-- Keep public surfaces small and avoid depending on another unit's private representation.
-- Prevent storage formats, external interfaces, and volatile tools from spreading through unrelated
-  core decisions.
-- Transform data where meaning or ownership changes, not at every arbitrary layer.
-- Avoid cycles that make the owner of data or behavior ambiguous.
-- Keep simple, cohesive behavior together when no real change boundary separates it.
+- Define inputs, results, and failure meanings that the consumer can understand without inspecting the implementation.
+- Keep implementations dependent on the protected contract when the consumer must remain independent of their technology.
+- Keep conversions with code allowed to know both representations. A public model accepting an internal provider type in its factory still exposes that dependency.
+- Separate public boundary models when ownership, meaning, validation, or change reasons differ, even when their fields currently match.
+- Reuse an existing type for internal transfers that do not introduce a distinct contract. Do not add a copy at every method call.
+- Keep the source graph acyclic and limit each consumer to the part of a contract it needs.
+- Keep a single implementation behind an interface when that interface protects a real boundary. Do not require interfaces for every class or for mocking alone.
+
+These are source-contract decisions; directory names and framework mechanisms are outside this reference's scope.
 
 ### Distinguish Rules from Existing Patterns
 
@@ -330,18 +344,20 @@ this output?
   that code.
 - Let official tools update lock and build-owned artifacts through their supported workflows.
 
-## Default Practices
+## Resolve Competing Qualities
 
-Use these defaults when more specific guidance does not decide the issue:
+When design qualities compete, prioritize:
 
-- Inspect definitions, usages, contracts, data sources, and tests before changing behavior.
-- Reuse a well-named existing owner before creating a new abstraction.
-- Keep the main path visible and move incidental mechanics behind meaningful names.
-- Keep externally visible effects and trust transitions easy to locate.
-- Prefer a small public surface and cohesive private implementation.
-- Verify changed behavior and important invariants with the project's established tools.
-- Add regression evidence for a defect fix.
-- Report only material decisions, intentional exceptions, completed checks, and remaining gaps.
+1. Required behavior and real contracts
+2. Security, data integrity, and safe failure
+3. Clear responsibility and ownership
+4. One authoritative source of knowledge
+5. Maintainability and controlled change impact
+6. The simplest design that satisfies the current need
+7. Consistency with established language and project conventions
+8. Speculative extensibility or clever brevity
+
+A more specific syntax convention does not automatically resolve a responsibility or contract defect. Respect explicit instructions and actual external contracts; evaluate incidental patterns against the affected behavior.
 
 ## Contextual Decisions
 

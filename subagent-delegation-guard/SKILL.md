@@ -42,7 +42,7 @@ Do not spawn if any required boundary, success criterion, evidence requirement, 
 
 ## Limit Concurrency and Prevent Recursion
 
-- Keep at most four spawned-agent threads open concurrently, including reviewers and blocker investigators.
+- Use the concurrency capacity available in the runtime without imposing an additional numeric agent-count limit.
 - Never spawn more agents than genuine independent workstreams.
 - Close completed agents before starting another batch.
 - Do not impose a separate lifetime call limit, but require every call to pass preflight independently.

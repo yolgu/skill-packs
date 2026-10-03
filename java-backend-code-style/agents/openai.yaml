@@ -1,4 +1,4 @@
 interface:
   display_name: "Java Backend Code Style"
-  short_description: "Project-aware Java backend coding rules"
-  default_prompt: "Use $java-backend-code-style to apply the project's established conventions to the requested Java backend implementation or review while preserving observable behavior."
+  short_description: "Java, DTO, JPA, and Spring implementation rules"
+  default_prompt: "Use $java-backend-code-style to implement or review this Java backend change with clear DTO contracts, storage-only JPA entities, and focused framework verification."
