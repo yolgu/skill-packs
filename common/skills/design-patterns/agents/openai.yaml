@@ -1,0 +1,5 @@
+interface:
+  display_name: "Design Pattern Selection"
+  short_description: "Choose and apply patterns for current needs and code structure"
+policy:
+  allow_implicit_invocation: true
