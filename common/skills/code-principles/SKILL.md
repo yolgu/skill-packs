@@ -55,6 +55,7 @@ principle mechanically when doing so would weaken correctness or clarity.
 - Implement actual behavior and non-functional requirements, not merely code that compiles.
 - Give each rule, fact, state, and mutation path one clear owner.
 - Remove duplicated knowledge, not every repeated sequence of text.
+- Do not make a reported case pass by special-casing it; change the rule or data that owns its cause.
 - Introduce an abstraction only for a real concept, shared knowledge, or stable boundary.
 - Make state ownership, mutation, and externally visible side effects explicit.
 - Express public inputs, outputs, failure modes, semantic values, and local value types precisely.

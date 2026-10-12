@@ -71,7 +71,7 @@
 
 
   <code_style>
-    All code must follow OOP, DDD, Clean Code, SSOT, explicit return type annotation, human-readable and Effective Software Design principles. Prioritize domain model clarity, separation of responsibilities, readability, and maintainability over language/framework-specific idioms. No over-engineering. Only the necessary abstractions. Avoid writing overly defensive code. Self-Documenting Code, Narrative Style
+    All code must follow OOP, DDD, Clean Code, SSOT, explicit return type annotation, human-readable and Effective Software Design principles. Prioritize domain model clarity, separation of responsibilities, readability, and maintainability over language/framework-specific idioms. No over-engineering. Only the necessary abstractions. Avoid writing overly defensive code. Do not make a case work by adding case-specific branches, exception lists, or hardcoded values; change what owns its cause. Self-Documenting Code, Narrative Style
   </code_style>
 
   

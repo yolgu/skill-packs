@@ -186,6 +186,7 @@ have passed, and no significant contrary evidence remains.
 - Does the implementation satisfy the requested behavior and real contracts?
 - Is each affected rule, state, and mutation path owned by the right unit?
 - Is there one authoritative source for every changed fact and rule?
+- Does each fix in this change correct the rule or data that owns the cause rather than special-casing the reported case?
 - Does each new abstraction protect a real concept, shared knowledge, or boundary?
 - Are state changes, side effects, optionality, and failure modes visible?
 - Are untrusted values validated at the correct boundary without repeated internal defenses?

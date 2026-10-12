@@ -7,6 +7,7 @@
   - [Honor Real Behavior and Contracts](#honor-real-behavior-and-contracts)
   - [Make Responsibility and Ownership Explicit](#make-responsibility-and-ownership-explicit)
   - [Keep One Authoritative Source for Knowledge](#keep-one-authoritative-source-for-knowledge)
+  - [Fix the Cause Where It Is Owned](#fix-the-cause-where-it-is-owned)
   - [Use the Smallest Meaningful Abstraction](#use-the-smallest-meaningful-abstraction)
   - [Expose State Changes and Side Effects](#expose-state-changes-and-side-effects)
   - [Make Public Contracts Precise](#make-public-contracts-precise)
@@ -84,6 +85,46 @@ Centralize when occurrences encode the same:
 
 Keep separate when code is only structurally similar, changes independently, or would require flags,
 branches, or a vague abstraction to share it.
+
+### Fix the Cause Where It Is Owned
+
+**Principle.** When your change must correct a wrong result, change the rule, data, or assumption
+that produces it, not code that makes only the reported case come out right.
+
+**Why.** A special case added for one input leaves the cause in place for neighboring inputs, grows
+with every new report, and hides the real rule from the next reader. Reported cases and tests verify
+correctness; they do not define the solution. A fix at the owner usually removes a branch or keeps
+the code the same size, while a patch usually adds one.
+
+**Decision test.** Why is the failing case wrong without this code? Does the change correct the rule
+or data that owns that reason, or does it single out the case?
+
+Treat these as signals that your change is a patch:
+
+- a branch or exception list keyed on specific values such as IDs, names, places, or dates;
+- a table or constant that copies data another source owns;
+- a fallback path that hides a failure or substitutes a different value;
+- a fix that covers only the reported case, with tests that check only that case;
+- a change that adds code where fixing the cause would have removed code or kept it the same size.
+
+These are not patches:
+
+- a distinction that the domain rule itself makes, such as a different policy per membership tier;
+- translation, at a boundary, of a difference that an external contract documents.
+
+This principle governs the change you are making. Patches that already exist outside the task are
+not a reason to rewrite that code; mention one only when it affects the task, as described in
+[Control Change Scope and Compatibility](#control-change-scope-and-compatibility).
+
+When the owner of the cause is code the task already authorizes you to change, fix it there without
+asking. When it is anywhere else, such as a module the task does not cover, another repository, an
+external provider, or a change that needs approval, do not work around it silently: report the
+cause, its owner, and the fix at the owner, and let the user choose. If the user chooses a temporary
+workaround, keep it in one place and record why it exists and when to remove it.
+
+Handle the failure itself as described in
+[Validate Boundaries and Preserve Failure Meaning](#validate-boundaries-and-preserve-failure-meaning),
+and judge new layers by [Use the Smallest Meaningful Abstraction](#use-the-smallest-meaningful-abstraction).
 
 ### Use the Smallest Meaningful Abstraction
 
