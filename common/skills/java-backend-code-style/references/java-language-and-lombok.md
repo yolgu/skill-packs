@@ -10,47 +10,41 @@
 
 ## Project Java baseline
 
-<a id="java-001"></a>
 ### Use Java features supported by the project
 
-**JAVA-001 · MUST**
+**MUST**
 
 Inspect Maven Compiler `release/source/target`, the Gradle Toolchain, Spring Boot version, CI runtime, and production runtime. Use only Java features supported by their intersection. JDK distributions such as Temurin and Corretto are operational choices; this rule does not mandate a specific distribution or Java-version upgrade.
 
-<a id="java-002"></a>
 ### Keep the existing javax or jakarta namespace
 
-**JAVA-002 · MUST NOT**
+**MUST NOT**
 
 Follow the framework generation and existing module configuration for `jakarta.*` versus `javax.*`. Do not mix them arbitrarily within one module or begin a namespace migration solely as a code-style change.
 
-<a id="java-005"></a>
 ### Use preview features only when explicitly supported
 
-**JAVA-005 · MUST**
+**MUST**
 
 Use a preview feature only when the build, CI, and production runtime all enable and support it explicitly. Do not introduce one merely because it compiles locally.
 
 ## Language features and explicit types
 
-<a id="java-003"></a>
 ### Use regular classes instead of records
 
-**JAVA-003 · MUST NOT**
+**MUST NOT**
 
 Do not use Java `record`, including for Request, Response, DTO, Command, Query, Result, Value Object, Event, QueryRow, or configuration types. Use regular classes to make construction, validation, and exposure contracts explicit. Do not mass-convert unrelated existing records.
 
-<a id="java-004"></a>
 ### Avoid Java var and Lombok val or var
 
-**JAVA-004 · MUST NOT**
+**MUST NOT**
 
 Do not use Java `var`, Lombok `val`, or Lombok `var`.
 
-<a id="java-006"></a>
 ### Declare local variable types explicitly
 
-**JAVA-006 · MUST**
+**MUST**
 
 Declare an explicit type for every local variable. The diamond operator is permitted when the owning declaration states the type. Declare lambda parameter types where Java syntax permits them; a method reference can use the referenced method's declared signature.
 
@@ -61,10 +55,9 @@ final List<MemberSummary> summaries = members.stream()
     .toList();
 ```
 
-<a id="java-007"></a>
 ### Make immutability clear without requiring final everywhere
 
-**JAVA-007 · SHOULD**
+**SHOULD**
 
 - Make injected dependencies and constants `final`.
 - Make immutable DTO, Value Object, and Event fields `private final` when the construction mechanism permits it.
@@ -74,10 +67,9 @@ final List<MemberSummary> summaries = members.stream()
 
 ## Time, money, character sets, and collections
 
-<a id="java-008"></a>
 ### Choose types that preserve meaning and precision
 
-**JAVA-008 · MUST**
+**MUST**
 
 Use standard types that match the meaning and required precision.
 
@@ -96,10 +88,9 @@ When currency, scale, or rounding rules repeat, make a Value Object such as `Mon
 
 ## Source formatting
 
-<a id="format-001"></a>
 ### Follow the project's formatting rules
 
-**FORMAT-001 · MUST**
+**MUST**
 
 Apply formatting rules in this order:
 
@@ -111,10 +102,9 @@ Apply formatting rules in this order:
 
 When the project tooling and examples wrap lines differently, follow the project tooling.
 
-<a id="format-002"></a>
 ### Use consistent defaults when formatting rules are absent
 
-**FORMAT-002 · SHOULD**
+**SHOULD**
 
 Use these defaults when the project defines no corresponding rule:
 
@@ -127,10 +117,9 @@ Use these defaults when the project defines no corresponding rule:
 
 The 120-character limit is not an absolute cutoff that justifies obscuring meaning.
 
-<a id="format-003"></a>
 ### Use braces and explicit imports
 
-**FORMAT-003 · MUST**
+**MUST**
 
 - Use braces for every control statement.
 - Do not leave wildcard imports or unused imports.
@@ -138,19 +127,17 @@ The 120-character limit is not an absolute cutoff that justifies obscuring meani
 - Use static imports sparingly when they improve sentence-like readability, as with AssertJ or Mockito.
 - Put class and method annotations on separate lines by default.
 
-<a id="format-004"></a>
 ### Format code to reveal the business flow
 
-**FORMAT-004 · SHOULD**
+**SHOULD**
 
 Keep short, clear statements on one line. When code becomes long, wrap types, calls, and arguments by business unit. Split a long chain into explicitly typed local variables when it hides the business sequence. Use blank lines to separate narrative stages such as input, lookup, authorization, domain behavior, persistence, and result construction.
 
 When the project defines no class-member order, default to constants, static fields, instance fields, constructors, static factories, public methods, narrower methods, and private helpers. Keep related behavior together instead when that better preserves the narrative flow.
 
-<a id="format-005"></a>
 ### Keep formatting changes within the task's scope
 
-**FORMAT-005 · MUST**
+**MUST**
 
 - Do not reformat an unrelated entire file during a functional change.
 - If the formatter changes a whole file, inspect the diff size and repository policy.
@@ -159,35 +146,31 @@ When the project defines no class-member order, default to constants, static fie
 
 ## Lombok
 
-<a id="lombok-001"></a>
 ### Use Lombok only when already adopted
 
-**LOMBOK-001 · MUST NOT**
+**MUST NOT**
 
 Do not add Lombok as a dependency merely to apply these rules. Apply the allowances below only when the project already uses Lombok.
 
-<a id="lombok-002"></a>
 ### Limit generated getters and constructors to clear contracts
 
-**LOMBOK-002 · SHOULD**
+**SHOULD**
 
 Use @Getter for deliberate read contracts and @RequiredArgsConstructor for straightforward constructor injection or immutable transfer data. Simple JPA data objects may use @Getter and @Setter for their data-access role. These annotations do not authorize business methods or DTO conversion on an Entity.
 
 Write an explicit constructor when qualifiers, lazy dependencies, same-type dependencies, field ordering, or construction-time validation need to be visible.
 
-<a id="lombok-003"></a>
 ### Use Lombok where framework conventions justify it
 
-**LOMBOK-003 · MAY**
+**MAY**
 
 - For framework requirements such as JPA, use a restricted no-argument constructor such as `@NoArgsConstructor(access = AccessLevel.PROTECTED)`.
 - Use `@Slf4j` when the project already uses Lombok and SLF4J.
 - Use `@AllArgsConstructor` sparingly for a simple transfer object with no business rules. Write an explicit constructor when field ordering is easy to confuse or validation is meaningful.
 
-<a id="lombok-004"></a>
 ### Reserve builders for objects with many optional fields
 
-**LOMBOK-004 · SHOULD NOT**
+**SHOULD NOT**
 
 Limit builders to boundary objects with many optional fields, such as:
 
@@ -199,10 +182,9 @@ Limit builders to boundary objects with many optional fields, such as:
 
 Do not use a builder as the default construction mechanism for a Domain Entity, Value Object, JPA Entity, Spring Bean, or an object with only two or three required values. When a builder is justified, consider limiting it to a specific construction path rather than the entire class. Do not use `toBuilder = true` or `@Builder.Default` to bypass domain state transitions or collection immutability.
 
-<a id="lombok-005"></a>
 ### Avoid Lombok annotations that obscure object behavior
 
-**LOMBOK-005 · MUST NOT**
+**MUST NOT**
 
 Do not use:
 
@@ -213,10 +195,9 @@ Do not use:
 
 If a project already standardizes `@Value` for safe internal value types, allow only a narrow exception after checking the type's construction, equality, and `toString` semantics.
 
-<a id="lombok-006"></a>
 ### Generate equality and toString only for safe value types
 
-**LOMBOK-006 · MUST**
+**MUST**
 
 - Use `@EqualsAndHashCode` only on a Value Object with clear value equality and immutable fields.
 - Do not use automatic equality on a JPA Entity, Aggregate, lazy-loaded relationship, or object containing mutable fields.

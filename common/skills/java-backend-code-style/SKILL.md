@@ -13,7 +13,7 @@ Inspect the module's Java/toolchain version, build and formatter settings, packa
 
 ## Select References
 
-The [rule index](references/rule-index.md) is a navigation catalog. Rule definitions and strengths live in the linked sections. Read only the references relevant to the work, in full.
+Read only the references relevant to the work, in full.
 
 | Work | Reference |
 |---|---|
@@ -34,4 +34,4 @@ Any Java source change reads the language and object references. A change crossi
 
 MUST and MUST NOT are requirements; SHOULD and SHOULD NOT are defaults; MAY is optional under its stated conditions. Existing external contracts can require a narrow, evidenced compatibility exception. Use the compatibility reference for that decision; do not infer a legacy migration or add a compatibility layer by default.
 
-Review findings identify the rule or section and actual impact. Implementation reports identify the resulting behavior, focused verification, and material remaining gaps.
+Review findings state the problem and its actual impact first, and cite the violated rule by its title as supporting evidence. Implementation reports identify the resulting behavior, focused verification, and material remaining gaps.

@@ -12,10 +12,9 @@
 
 Rule-strength meanings are defined in [Rule Application](../SKILL.md#rule-application).
 
-<a id="compatibility-001"></a>
 ### Resolve Java rule conflicts from explicit contracts
 
-**COMPATIBILITY-001 · MUST**
+**MUST**
 
 Apply the user's requested behavior and scope, explicit project instructions, and the actual Java, HTTP, data, and operational contracts. A formatter or framework discovery requirement settles that technical issue; repeated source patterns do not automatically justify a responsibility or data-integrity defect.
 
@@ -23,10 +22,9 @@ Use the strengths above for this skill's Java rules. Do not rank other skills as
 
 ## External contracts
 
-<a id="compatibility-002"></a>
 ### Preserve public and operational contracts
 
-**COMPATIBILITY-002 · MUST**
+**MUST**
 
 The following are public or operational contracts, not simple code-style details. Do not change them without an explicit request and verification:
 
@@ -40,34 +38,32 @@ The following are public or operational contracts, not simple code-style details
 
 Preserve external contracts through adapters and mappers even while improving names or separating objects internally.
 
-<a id="compatibility-004"></a>
 ### Address security and data-loss risks explicitly
 
-**COMPATIBILITY-004 · MUST**
+**MUST**
 
 When existing behavior contains an obvious security vulnerability or data-loss risk, do not reproduce it silently. Explain the dangerous behavior, affected contract, available preservation or correction choices, and verification method to the user, then follow the authorized decision.
 
 ## Compatibility exceptions
 
-<a id="compatibility-003"></a>
 ### Keep compatibility exceptions narrow and traceable
 
-**COMPATIBILITY-003 · MUST**
+**MUST**
 
 Isolate compatibility code that differs from a general rule at the narrowest adapter boundary, such as the affected Controller, Response conversion, or policy. Track:
 
-- The excepted rule ID
+- The general behavior being departed from
 - The external contract being preserved
-- Why the general rule cannot be applied
+- Why the general behavior cannot be applied
 - The permitted class and method scope
 - The verification test
 - The reconsideration condition
 
-Do not assume a legacy system or introduce a compatibility component by default. When a real supported contract needs an exception, use a concise comment only if code and tests do not explain it.
+Do not assume a legacy system or introduce a compatibility component by default. When a real supported contract needs an exception, use a concise comment only if code and tests do not explain it. Describe the departure in plain terms rather than by this skill's rule titles, because readers of the source code do not know these rules and titles can change.
 
 ```java
-// COMPATIBILITY EXCEPTION: JSON-002
-// The supported client treats an empty nickname as unregistered.
+// Compatibility exception: exposes a missing nickname as "" instead of null.
+// Contract: the supported client treats an empty nickname as unregistered.
 // Scope: MemberResponse
 // Verification: MemberApiContractTest
 // Revisit: when the supported client contract changes
@@ -78,10 +74,9 @@ Do not spread the exception behavior into general Domain rules or new APIs.
 
 ## Change scope
 
-<a id="compatibility-005"></a>
 ### Limit refactoring to the requested work
 
-**COMPATIBILITY-005 · MUST**
+**MUST**
 
 Change only what is causally necessary to complete the requested implementation, modification, or refactoring. The following directly related refactorings may be included:
 
@@ -92,10 +87,9 @@ Change only what is causally necessary to complete the requested implementation,
 - Isolating an SDK or Entity type leaking across the current boundary
 - Making the changed behavior testable
 
-<a id="compatibility-006"></a>
 ### Avoid unrelated cleanup and unrequested features
 
-**COMPATIBILITY-006 · MUST NOT**
+**MUST NOT**
 
 Do not mass-fix unrelated existing violations. Do not rewrite a whole file or module or broadly move packages for a one-line change. Do not combine renaming every DTO, separating every JPA model, adding an interface to every Service, converting every SQL statement to QueryDSL, or replacing every Lombok annotation in one task.
 
@@ -105,10 +99,9 @@ Apply the relevant `MUST` and `MUST NOT` rules to new code. Safely improve obvio
 
 ## Review and completion reporting
 
-<a id="compatibility-007"></a>
 ### Keep reviews read-only unless changes are authorized
 
-**COMPATIBILITY-007 · MUST**
+**MUST**
 
 Do not interpret a review request as authorization to modify files. Include the following in a review finding:
 
@@ -120,10 +113,9 @@ Do not interpret a review request as authorization to modify files. Include the 
 
 Distinguish rule strength and actual impact; do not report a style preference as though it were a critical defect.
 
-<a id="compatibility-008"></a>
 ### Report outcomes, verification, and remaining gaps
 
-**COMPATIBILITY-008 · MUST**
+**MUST**
 
 Make an implementation completion report communicate the following instead of focusing on rule compliance itself:
 
