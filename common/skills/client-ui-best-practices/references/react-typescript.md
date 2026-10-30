@@ -195,7 +195,6 @@ Effect가 필요하면 setup과 cleanup을 같은 외부 contract로 다루고 d
 - internal Hook call count, private state, component implementation detail에 결합하지 않는다.
 - API는 controllable boundary로 success, empty, validation failure, network failure, retry를 검증한다.
 - routing은 invalid parameter, direct entry, back navigation, authorization result를 검증한다.
-- bug fix에는 기존 실패를 재현하는 regression test를 추가한다.
 - giant snapshot으로 behavior test를 대체하지 않는다.
 - E2E는 login, payment, critical creation flow처럼 실패 비용이 큰 여정에 한정한다.
 
@@ -277,7 +276,6 @@ Effect가 필요하면 setup과 cleanup을 같은 외부 contract로 다루고 d
 3. lint와 format check를 실행한다.
 4. route, dependency wiring, environment 또는 build contract를 바꿨다면 Vite build를 실행한다.
 5. 사용자 핵심 flow가 영향을 받으면 관련 integration 또는 E2E를 실행한다.
-6. 실패 명령, 실패 원인, 실행하지 못한 검증과 남은 위험을 분리해 보고한다.
 
 ## 공식 기준 자료
 

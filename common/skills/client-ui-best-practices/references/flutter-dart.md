@@ -221,7 +221,6 @@ Flutter 생태계에는 하나의 cache library를 보편적 기본값으로 강
 - loading, success, empty, failure, retry, duplicate submit, dispose 이후 callback을 검증한다.
 - routing은 direct deep link, invalid parameter, back navigation, redirect를 검증한다.
 - Provider override로 외부 응답과 clock·identifier 같은 nondeterministic dependency를 제어한다.
-- bug fix에는 기존 실패를 재현하는 regression test를 추가한다.
 - giant golden·snapshot으로 state behavior test를 대체하지 않는다. visual contract가 실제 요구일 때만 golden test를 사용한다.
 - integration test는 payment, login, critical creation flow처럼 실패 비용이 큰 여정에 집중한다.
 

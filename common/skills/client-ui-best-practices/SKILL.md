@@ -1,161 +1,166 @@
 ---
 name: client-ui-best-practices
-description: Vite + React + TypeScript 및 Flutter + Dart 클라이언트 코드에서 상태 소유권, 컴포넌트·위젯 경계, 기능 구조, 서버 상태, 폼, 라우팅, 비동기 흐름, 테스트, 접근성, 성능과 보안을 저장소 맥락에 맞게 설계·구현·리팩터링·진단·리뷰한다. UI 아키텍처, 상태관리, 데이터 흐름 또는 기능 경계가 중요한 React·Flutter 작업에 사용한다. 순수 스타일링, 배포, 백엔드 전용 또는 무관한 단순 수정에는 사용하지 않는다.
+description: Design, implement, refactor, diagnose, and review state ownership, component and widget boundaries, feature structure, server state, forms, routing, asynchronous flows, tests, accessibility, performance, and security in Vite + React + TypeScript and Flutter + Dart client code, fitted to the repository's context. Use for React and Flutter work where UI architecture, state management, data flow, or feature boundaries matter. Do not use for pure styling, deployment, backend-only work, or unrelated simple edits. Use it with code-principles loaded alongside.
 ---
 
 # Client UI Best Practices
 
-저장소의 현재 계약과 상태 소유권을 먼저 확인한 뒤, Vite + React + TypeScript 또는 Flutter + Dart 클라이언트 작업을 최소 범위로 설계하고 수행한다. 라이브러리 취향이나 폴더 템플릿을 강제하지 말고, 올바른 소유권·명시적인 데이터 흐름·검증 가능한 사용자 동작을 만든다.
+First confirm the repository's current contracts and state ownership, then design and carry out Vite + React + TypeScript or Flutter + Dart client work in the smallest scope. Do not impose library preferences or folder templates; produce correct ownership, explicit data flow, and verifiable user behavior.
 
-## 요청 모드 확정
+## Determine the Request Mode
 
-사용자의 동사와 명시적 범위로 모드를 먼저 확정한다.
+Determine the mode first from the user's verbs and explicit scope.
 
-- **리뷰**: 읽기 전용으로 결함을 찾는다. 파일을 수정하지 않는다. 반드시 [review-rubric.md](references/review-rubric.md)를 추가로 읽는다.
-- **진단**: 원인과 근거를 추적한다. 사용자가 수정을 요청하지 않았으면 파일을 수정하지 않는다.
-- **설계**: 저장소의 실제 구조와 제약에 맞는 경계와 선택지를 제시한다. 구현 요청이 없으면 파일을 수정하지 않는다.
-- **구현·수정·리팩터링**: 요청에 필요한 파일과 테스트를 변경하고 프로젝트의 검증 명령을 실행한다.
-- **혼합 요청**: 명시적으로 요청된 변경만 수행하고, 나머지는 별도 제안으로 분리한다.
+- **Review**: Find defects read-only. Do not modify files. Always also read [review-rubric.md](references/review-rubric.md).
+- **Diagnosis**: Trace the cause and its evidence. If the user did not request a fix, do not modify files.
+- **Design**: Present boundaries and options that fit the repository's actual structure and constraints. If there is no implementation request, do not modify files.
+- **Implementation, modification, or refactoring**: Change the files and tests the request needs, and run the project's verification commands.
+- **Mixed request**: Perform only the explicitly requested changes, and separate the rest into a separate proposal.
 
-모드가 애매하면 먼저 읽기 전용 탐색을 수행한다. 읽기 전용 요청을 구현 권한으로 확대하지 않는다.
+If the mode is ambiguous, perform read-only exploration first. Do not expand a read-only request into implementation authority.
 
-## 대상 기술 판별과 참조 선택
+## Identify the Target Technology and Select References
 
-사용자에게 묻기 전에 manifest, lockfile, 설정, import, 대상 파일을 확인한다.
+Before asking the user, check the manifest, lockfile, configuration, imports, and target files.
 
-1. `package.json`, lockfile, Vite 설정, `tsconfig`, React import와 실제 소스가 대상이면 [react-typescript.md](references/react-typescript.md)를 읽는다.
-2. `pubspec.yaml`, lockfile, Flutter·Dart SDK 제약, Flutter import와 실제 소스가 대상이면 [flutter-dart.md](references/flutter-dart.md)를 읽는다.
-3. 모노레포에 두 기술이 있어도 사용자가 지정한 기능이나 파일의 참조만 읽는다.
-4. 한 요청이 두 클라이언트를 실제로 함께 변경할 때만 두 참조를 모두 읽는다.
-5. 리뷰 모드에서만 기술 참조와 함께 [review-rubric.md](references/review-rubric.md)를 읽는다.
+1. When the target is `package.json`, the lockfile, Vite configuration, `tsconfig`, React imports, and actual source, read [react-typescript.md](references/react-typescript.md).
+2. When the target is `pubspec.yaml`, the lockfile, Flutter and Dart SDK constraints, Flutter imports, and actual source, read [flutter-dart.md](references/flutter-dart.md).
+3. Even when a monorepo contains both technologies, read only the reference for the feature or file the user specified.
+4. Read both references only when one request actually changes both clients together.
+5. Read [review-rubric.md](references/review-rubric.md) together with the technology reference only in review mode.
 
-설정 파일이 존재한다는 이유만으로 대상 기술이나 배포 플랫폼을 단정하지 않는다. 실제 import, build 설정, 사용처를 교차 확인한다.
+Do not conclude the target technology or deployment platform merely because a configuration file exists. Cross-check actual imports, build configuration, and usages.
 
-## 작업 절차
+## Workflow
 
-### 1. 범위와 저장소 계약 파악
+### 1. Understand the Scope and Repository Contracts
 
-- 사용자 목표, 완료 조건, 비목표, 변경 가능 범위를 한 문장씩 정리한다.
-- 작업 트리의 기존 사용자 변경을 확인하고 관련 없는 변경을 보존한다.
-- 아키텍처와 계층 경계, naming, file layout, dependency direction, 테스트 관례를 확인한다.
-- 상태관리, 서버 상태, 라우팅, 폼, 직렬화, 테스트 도구와 실제 버전을 manifest·lockfile·import에서 확인한다.
-- 실제 build, typecheck, lint, analysis, test 명령을 package script, tool 설정, 프로젝트 문서에서 찾는다.
+- Summarize the user's goal, completion criteria, non-goals, and changeable scope in one sentence each.
+- Check existing user changes in the working tree and preserve unrelated changes.
+- Check architecture and layer boundaries, naming, file layout, dependency direction, and test conventions.
+- Check state management, server state, routing, forms, serialization, test tools, and their actual versions in the manifest, lockfile, and imports.
+- Find the actual build, typecheck, lint, analysis, and test commands in package scripts, tool configuration, and project documentation.
 
-### 2. 정의와 사용처 추적
+### 2. Trace Definitions and Usages
 
-- 먼저 기능·데이터 흐름·상태 소유권을 포괄하는 넓은 의미 검색을 수행한다.
-- 같은 개념을 다른 표현으로 여러 번 검색한다.
-- 대상 symbol의 정의, 생성 지점, 변환, 모든 주요 소비자, 테스트를 추적한다.
-- API 계약, schema, type, config, constant, fixture 중 무엇이 단일 진실 공급원인지 확인한다.
-- 기존 추상화가 요청을 이미 해결하는지 확인하기 전에는 새 추상화를 만들지 않는다.
+- First perform a broad semantic search that covers the feature, data flow, and state ownership.
+- Search for the same concept several times with different wording.
+- Trace the target symbol's definition, creation points, transformations, all major consumers, and tests.
+- Determine which of the API contract, schema, type, config, constant, or fixture is the single source of truth.
+- Do not create a new abstraction before checking whether an existing abstraction already solves the request.
 
-### 3. 상태 소유권 분류
+### 3. Classify State Ownership
 
-각 상태에 대해 의미, 권위 있는 소유자, 소비자, 변경 주체, 생명주기, 복원 요구, 폐기 시점을 확인한다. 다음 순서로 배치한다.
+For each state, determine its meaning, authoritative owner, consumers, mutators, lifecycle, restoration requirements, and disposal point. Place it in the following order.
 
-1. 다른 값에서 계산할 수 있으면 저장하지 말고 파생한다.
-2. 일시적인 표현 상태는 사용하는 가장 가까운 컴포넌트·위젯이 소유한다.
-3. 입력 중인 초안과 표시 오류는 폼 경계가 소유한다.
-4. 공유·북마크·새로고침·뒤로 가기 복원이 필요하면 URL·라우터·내비게이션이 소유한다.
-5. 원격 데이터와 freshness·loading·error는 query/cache 계층이 소유한다.
-6. 기기에 유지되는 값은 storage repository를 권위 있는 경계로 둔다.
-7. 여러 화면이 함께 수정하는 클라이언트 도메인 상태는 feature 범위 상태 객체가 소유한다.
-8. 인증 세션처럼 앱 전체 생명주기를 가진 상태만 app global로 승격한다.
+1. If it can be computed from other values, derive it instead of storing it.
+2. Transient presentation state is owned by the nearest component or widget that uses it.
+3. In-progress drafts and displayed errors are owned by the form boundary.
+4. If sharing, bookmarking, refresh, or back-navigation restoration is needed, the URL, router, or navigation owns it.
+5. Remote data and its freshness, loading, and error are owned by the query/cache layer.
+6. For values persisted on the device, make the storage repository the authoritative boundary.
+7. Client domain state that several screens modify together is owned by a feature-scoped state object.
+8. Promote to app global only state with an app-wide lifecycle, such as the authentication session.
 
-같은 서버 데이터를 query cache, global store, local state에 복제하지 않는다. 같은 URL 값을 router와 store에 함께 저장하지 않는다. 복제가 불가피하면 목적, 권위자, 동기화 방향, 충돌, 만료와 폐기를 명시한다.
+Do not duplicate the same server data in the query cache, global store, and local state. Do not store the same URL value in both the router and a store. If duplication is unavoidable, state its purpose, authority, synchronization direction, conflicts, expiry, and disposal.
 
-### 4. 책임과 데이터 흐름 설계
+### 4. Design Responsibilities and Data Flow
 
-다음 흐름이 코드에서 읽히게 한다.
+Make the following flow readable in the code.
 
-`사용자 입력 → 의도가 드러나는 명령 → 상태 객체·Use Case → Repository·외부 경계 → 명시적 상태 전이 → UI`
+`User input → intention-revealing command → state object / Use Case → Repository / external boundary → explicit state transition → UI`
 
-- `setLoading`, 범용 setter보다 `submitOrder`, `retryPayment`, `selectDeliveryAddress`처럼 사용자 의도를 드러낸다.
-- UI는 렌더링·조합·입력 전달에 집중한다.
-- Domain은 프레임워크, HTTP, 저장소, 라우터에 의존하지 않는다.
-- Application·Use Case는 도메인 행위와 외부 경계를 조정한다.
-- Infrastructure는 API, storage, analytics, platform API를 구현한다.
-- 앱 시작 지점이나 명확한 composition root에서 dependency를 조립한다.
-- mutable global singleton과 어디서나 접근하는 service locator를 만들지 않는다.
+- Reveal user intent, as in `submitOrder`, `retryPayment`, and `selectDeliveryAddress`, rather than `setLoading` or a generic setter.
+- UI focuses on rendering, composition, and passing input along.
+- Domain does not depend on the framework, HTTP, storage, or the router.
+- Application and Use Case coordinate domain behavior and external boundaries.
+- Infrastructure implements APIs, storage, analytics, and platform APIs.
+- Assemble dependencies at the app's starting point or a clear composition root.
+- Do not create mutable global singletons or a service locator accessible from anywhere.
 
-DDD·Clean Architecture·OOP는 실제 도메인 복잡도에 비례해 적용한다. 식별성과 생명주기가 있을 때 Entity, 의미와 검증 규칙이 있을 때 Value Object, 여러 경계를 조정할 때 Use Case, 실제 외부 경계를 보호할 때 Repository나 interface를 도입한다. 단순 CRUD에 비어 있는 계층과 구현 하나뿐인 장식용 abstraction을 만들지 않는다.
+Apply DDD, Clean Architecture, and OOP in proportion to the actual domain complexity. Introduce an Entity when there is identity and a lifecycle, a Value Object when there is meaning and validation rules, a Use Case when coordinating several boundaries, and a Repository or interface when protecting a real external boundary. Do not create empty layers or decorative abstractions with only one implementation for simple CRUD.
 
-### 5. 컴포넌트·위젯 경계 결정
+### 5. Decide Component and Widget Boundaries
 
-줄 수가 아니라 책임, 상태 소유권, 생명주기, 변경 이유로 나눈다.
+Split by responsibility, state ownership, lifecycle, and reason for change, not by line count.
 
-- 독립 state·effect·async work·error handling·test contract가 있으면 분리를 검토한다.
-- 상위 요소와 다른 이유로 변경되거나 같은 의미와 계약으로 반복 사용되면 분리를 검토한다.
-- 긴 JSX·widget tree, 미래의 재사용 추측, 고정 파일 크기만으로 분리하지 않는다.
-- 분리 후 많은 구현 세부 props를 그대로 전달한다면 경계를 다시 검토한다.
-- boolean flag가 늘어 여러 역할을 맡으면 composition, 명시적 variant, slot·children을 검토한다.
-- 두 번 사용됐다는 이유만으로 `shared`에 승격하지 않는다. 안정된 의미, 동일 계약, 동일 변경 방향, 명확한 소유권이 모두 확인될 때만 공용화한다.
-- 공용 UI primitive가 특정 feature store, API client, route에 의존하지 않게 한다.
+- Consider splitting when there is independent state, effects, async work, error handling, or a test contract.
+- Consider splitting when it changes for a different reason than its parent, or is used repeatedly with the same meaning and contract.
+- Do not split based only on a long JSX or widget tree, speculation about future reuse, or a fixed file size.
+- If after splitting you pass many implementation-detail props straight through, reconsider the boundary.
+- When boolean flags multiply and one element takes on several roles, consider composition, explicit variants, or slots and children.
+- Proceed through a feature screen slice top-down, in this order: the route and page, then the components and command or query hooks used only within that page (the ViewModel in Flutter), pure domain only when there are real rules, and last the request declarations and the API client (the repository implementation in Flutter). Lower layers build only what the upper layer actually needs.
+- Only work that builds the reusable parts themselves, such as a design system or a shared UI kit, proceeds bottom-up (Component-Driven Development).
+- Do not promote something to `shared` merely because it is used twice. Make it shared only when a second page needs it with the same meaning and the same direction of change, and the same contract and clear ownership are also confirmed.
+- Keep shared UI primitives from depending on a specific feature store, API client, or route.
 
-### 6. 비동기·서버·폼·라우팅 계약 확정
+### 6. Settle the Async, Server, Form, and Routing Contracts
 
-- 중요한 비동기 흐름은 `initial`, `loading`, `success(data)`, `empty`, `refreshing(previousData)`, `failure(error, previousData?)` 중 실제 필요한 상태를 배타적으로 모델링한다.
-- 겹치는 요청에는 latest-wins, 중복 차단, 순차 실행 중 하나를 의식적으로 정한다.
-- mutation 후 권위 있는 cache 갱신 또는 invalidation 정책을 정한다.
-- optimistic update는 사용자 가치와 rollback 계약이 있을 때만 사용한다.
-- 폼 초안, 클라이언트 안내용 검증, 도메인 규칙, 서버 검증의 소유자를 분리한다.
-- URL path·query·deep link를 외부 입력으로 파싱하고 serialize·deserialize 규칙을 한곳에 둔다.
-- 복원돼야 할 상태를 메모리 전용 route extra나 임시 store에 숨기지 않는다.
+- For important async flows, model exclusively only the states actually needed among `initial`, `loading`, `success(data)`, `empty`, `refreshing(previousData)`, and `failure(error, previousData?)`.
+- For overlapping requests, deliberately choose one of latest-wins, duplicate blocking, or sequential execution.
+- Decide the authoritative cache update or invalidation policy after a mutation.
+- Use optimistic updates only when there is user value and a rollback contract.
+- Decide the list of screen states at design time, as the async states above plus retry, and write as a rule which screen state each server error response maps to.
+- Decide at design time the state the URL will own and the log and analytics event points.
+- Separate the owners of form drafts, client guidance validation, domain rules, and server validation. For each rule, first ask "Does the server already own this rule?"; if the server owns it, the client keeps only form guidance validation, preview calculation, offline behavior, and screen state transitions, and reuses the server's computed results. Guard against the weakness of network doubles drifting from the real contract with OpenAPI-based type and handler generation and runtime schema parsing of responses.
+- Parse the URL path, query, and deep links as external input, and keep the serialization and deserialization rules in one place.
+- Do not hide state that must be restored in memory-only route extras or a temporary store.
 
-### 7. 규칙 강도와 변경 범위 판단
+### 7. Judge Rule Strength and Change Scope
 
-규칙을 다음 세 단계로 구분한다.
+Classify rules into the following three levels.
 
-- **필수 계약**: 실제 오동작, 데이터 불일치, 보안·개인정보 위험을 막는 규칙이다. 위반을 그대로 답습하지 않는다.
-- **강한 기본값**: feature-first, local state 우선, intent-centered API, server-state 전용 소유자, 접근성 완료 기준 등이다. 저장소 근거가 있으면 예외를 허용한다.
-- **상황별 휴리스틱**: 특정 store·form·router 도구, memoization, codegen, file split 등이다. 현재 버전, 팀 표준, 측정 결과로 선택한다.
+- **Required contract**: A rule that prevents actual malfunctions, data inconsistency, or security and privacy risks. Do not copy a violation as it is.
+- **Strong default**: Feature-first, local state first, intent-centered APIs, a dedicated server-state owner, accessibility as a completion criterion, and so on. Allow an exception when there is repository evidence.
+- **Situational heuristic**: Specific store, form, or router tools, memoization, codegen, file splits, and so on. Choose by the current version, team standards, and measurement results.
 
-기존 Redux, Zustand, BLoC, Provider, ChangeNotifier 등을 개인 취향으로 교체하지 않는다. 실제 결함을 해결하는 최소 범위만 변경하고, 광범위한 migration은 별도 제안으로 분리한다. “베스트 프랙티스이므로”를 변경 근거로 사용하지 않는다.
+Do not replace existing Redux, Zustand, BLoC, Provider, ChangeNotifier, and the like out of personal preference. Change only the minimum scope that fixes an actual defect, and separate broad migrations into a separate proposal. Do not use “because it is a best practice” as the reason for a change.
 
-## 필수 계약
+## Required Contracts
 
-- 하나의 사실에는 하나의 권위 있는 소유자를 둔다.
-- React render와 Flutter build 중 네트워크, 저장, analytics 같은 부수 효과를 실행하지 않는다.
-- API, storage, URL, environment, file, deep link, platform channel 등 외부 입력을 runtime validation 또는 명시적 parser로 내부 타입에 변환한다.
-- 정적 type assertion이나 cast만으로 외부 데이터가 유효하다고 가정하지 않는다.
-- 오류를 조용히 삼키거나 무관한 기본값으로 바꾸지 않는다. 복구 가능한 오류와 계약·프로그램 오류를 구분한다.
-- subscription, controller, stream, animation, request 등 리소스의 owner와 cleanup·cancellation을 명확히 한다.
-- client route guard와 UI 숨김을 최종 authorization으로 간주하지 않는다.
-- client bundle·binary·log·analytics·error report에 secret, token, password, 불필요한 개인정보를 넣지 않는다.
-- raw HTML, WebView content, external URL, redirect, file path의 신뢰 경계와 validation·sanitization을 확인한다.
-- logout과 account switch 때 사용자별 cache와 민감 state의 폐기 범위를 정한다.
-- accessibility를 선택적 사후 작업이 아니라 기능 완료 조건으로 취급한다.
-- 사용자 표시 문자열을 state code나 domain 판단 값으로 사용하지 않는다. Domain·Application은 번역 문장 대신 의미 있는 code와 type을 반환한다.
+- Give one fact one authoritative owner.
+- Do not run side effects such as network, persistence, or analytics during React render or Flutter build.
+- Convert external input such as APIs, storage, URLs, environment, files, deep links, and platform channels into internal types with runtime validation or an explicit parser.
+- Do not assume external data is valid based only on a static type assertion or cast.
+- Do not silently swallow errors or turn them into unrelated defaults. Distinguish recoverable errors from contract and program errors.
+- Make clear the owner and the cleanup and cancellation of resources such as subscriptions, controllers, streams, animations, and requests.
+- Do not treat client route guards and hidden UI as final authorization.
+- Do not put secrets, tokens, passwords, or unnecessary personal data in the client bundle, binary, logs, analytics, or error reports.
+- Check the trust boundary and the validation and sanitization of raw HTML, WebView content, external URLs, redirects, and file paths.
+- Decide the disposal scope of per-user cache and sensitive state at logout and account switch.
+- Treat accessibility as a feature completion criterion, not optional after-the-fact work.
+- Do not use user-facing strings as state codes or domain decision values. Domain and Application return meaningful codes and types instead of translated sentences.
 
-## 성능·오프라인·관찰 가능성
+## Performance, Offline, and Observability
 
-- 안정적인 domain identifier를 list key로 사용하고 state subscription 범위를 실제 소비 범위로 제한한다.
-- derived state와 server state를 중복 저장하지 않고, render·build의 반복적인 무거운 계산을 피한다.
-- 광범위한 memoization, caching, normalization, virtualization은 재현 조건과 측정 근거가 있을 때 적용한다.
-- 기본은 online-first다. cache를 offline-first의 권위 있는 local model로 오해하지 않는다.
-- offline editing이 명시적 요구일 때만 command queue, idempotency, conflict, retention, account isolation, 복구를 별도 동기화 도메인으로 설계한다.
-- log, error report, analytics는 공급자 중립적인 Infrastructure boundary 뒤에 둔다.
-- 같은 오류를 여러 계층에서 중복 기록하지 않고, event contract를 typed single source로 관리한다.
+- Use stable domain identifiers as list keys, and limit the scope of state subscriptions to the actual consumption scope.
+- Do not store derived state and server state redundantly, and avoid repeated heavy computation in render and build.
+- Apply broad memoization, caching, normalization, and virtualization when there are reproduction conditions and measured evidence.
+- The default is online-first. Do not mistake the cache for an authoritative offline-first local model.
+- Only when offline editing is an explicit requirement, design the command queue, idempotency, conflicts, retention, account isolation, and recovery as a separate synchronization domain.
+- Put logs, error reports, and analytics behind a provider-neutral Infrastructure boundary.
+- Do not record the same error at several layers, and manage event contracts as a typed single source.
 
-## 버전·의존성·코드 생성
+## Versions, Dependencies, and Code Generation
 
-- 설치된 manifest, lockfile, import와 공식 문서에서 현재 API를 확인한다.
-- 최신이라는 이유만으로 dependency를 upgrade하거나 요청받지 않은 major migration을 수행하지 않는다.
-- 그린필드 dependency는 작업 시점의 stable 공식 문서와 실제 필요를 확인한 뒤 최소로 추가한다.
-- 코드 생성은 OpenAPI·GraphQL schema, serialization declaration, typed route declaration처럼 권위 있는 선언에서 반복 계약을 파생할 때만 사용한다.
-- generated file을 직접 수정하지 않는다. declaration을 단일 진실 공급원으로 두고 generate·validate 명령을 재현한다.
+- Check the current API from the installed manifest, lockfile, imports, and official documentation.
+- Do not upgrade a dependency merely because it is the latest, or perform a major migration that was not requested.
+- Add greenfield dependencies minimally, after checking the stable official documentation at the time of work and the actual need.
+- Use code generation only when deriving repeated contracts from an authoritative declaration such as an OpenAPI or GraphQL schema, serialization declarations, or typed route declarations.
+- Do not edit generated files directly. Keep the declaration as the single source of truth and reproduce the generate and validate commands.
 
-## 테스트와 완료 조건
+## Tests and Completion Criteria
 
-행동 변경에는 가장 가까운 책임 경계의 테스트를 추가하거나 갱신한다.
+For behavior changes, add or update tests at the nearest responsibility boundary. For a feature screen slice, write the outer-loop test first.
 
-- Domain rule은 프레임워크 없는 단위 테스트로 검증한다.
-- Use Case와 state transition은 제어 가능한 외부 경계 대역으로 검증한다.
-- component·widget은 내부 구현보다 사용자가 보는 결과와 상호작용으로 검증한다.
-- loading, success, empty, failure, retry, duplicate submission, routing 등 실제 분기를 검증한다.
-- 버그 수정에는 실패를 재현하는 regression test를 먼저 확보한다.
-- E2E는 실패 비용이 큰 핵심 사용자 여정에 집중한다.
+- The outer-loop test enters the route, operates like a user, and asserts the screen result, with only the network replaced by a double. Its form is a page or feature-area integration test using MSW for React, and a widget test given a fake repository for Flutter. Write one normal flow first in a failing state, and after it passes, close the slice with failure paths and accessibility.
+- Verify domain rules with framework-free unit tests.
+- Verify Use Cases and state transitions with controllable doubles of external boundaries.
+- Test the real implementation of each repository or API client that Use Case and screen tests double against a network double (MSW for React, a fake HTTP client for Flutter); that test is the double's contract test.
+- Verify components and widgets by the results the user sees and the interactions, rather than internal implementation.
+- Verify the actual branches, such as loading, success, empty, failure, retry, duplicate submission, and routing.
+- Keep E2E tests that go all the way to the real backend only for app-scope core user journeys with a high cost of failure.
 
-구현 모드에서는 저장소가 정의한 관련 테스트, typecheck, lint, Dart analysis, format check와 필요한 build를 실행한다. 실패를 분류해 원인을 바꾸지 않은 동일 재시도를 반복하지 않는다. 실행하지 못한 검증은 명령, 이유, 남은 위험과 함께 보고한다.
+In implementation mode, run the relevant tests, typecheck, lint, Dart analysis, format check, and the needed build defined by the repository. Classifying failures, retrying, and reporting verification that could not be run follow the verification rules of code-principles.
 
-리뷰·진단·설계 모드에서는 파일을 변경하지 않았음을 유지하고, 결론을 근거와 함께 제시한다. 최종 응답은 결과를 먼저 전달하고 변경 파일, 핵심 판단, 통과한 검증, 남은 검증 공백만 간결하게 정리한다.
+In review, diagnosis, and design modes, keep files unchanged and present conclusions with their evidence. The final response delivers the result first and briefly summarizes only the changed files, key judgments, passed verification, and remaining verification gaps.
