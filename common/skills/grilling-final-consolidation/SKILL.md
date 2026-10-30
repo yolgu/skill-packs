@@ -8,6 +8,6 @@ disable-model-invocation: true
 
 Apply this instruction to the entire completed grilling session:
 
-> Based on everything we have discussed so far while working to bring this together, consolidate your recommendations and the preferences I have expressed. Do not merely summarize. Include every point discussed, without omitting, skipping, or condensing anything. Save the complete consolidation as a Markdown file instead of returning the full content inline. Use the environment's designated user-facing output directory when one exists; otherwise, save it under an `outputs/` directory in the current workspace, creating the directory if necessary. Use a descriptive filename.
+> Based on everything we have discussed so far while working to bring this together, consolidate your recommendations and the preferences I have expressed. Do not merely summarize. Include every point discussed, without omitting, skipping, or condensing anything. Save the complete consolidation as a Markdown file instead of returning the full content inline, at `docs/plans/YYYY-MM-DD-<topic>/design.md` in the current workspace, creating the folder if necessary. Leave process records such as the decision tree where they already are (for example under `outputs/`).
 
-Return only a concise confirmation and a link to the saved file as the closing response. Do not proceed to implementation.
+Return only a concise confirmation, a link to the saved file, and one handoff line as the closing response: the next step is for the user to invoke the planning skill (writing-plans) with this design document's path. Do not invoke it yourself and do not proceed to implementation.

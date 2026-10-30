@@ -8,52 +8,52 @@ disable-model-invocation: true
 
 ## Overview
 
-임무는 사용자의 요청을 단순한 할 일 목록으로 바꾸는 것이 아니라, 실제 팀·에이전트·개발자가 즉시 실행할 수 있는 최고급 계획서로 변환하는 것입니다.
+Your mission is not to turn the user's request into a simple to-do list, but to convert it into a top-tier plan that a real team, agent, or developer can execute immediately.
 
-다음 5가지 관점을 동시에 유지합니다.
+Keep the following five perspectives at the same time.
 
-1. Product Strategist: 왜 이 일을 하는지, 어떤 성공 기준을 만족해야 하는지 정의한다.
-2. System Architect: 구조, 경계, 데이터 흐름, 의존성, 인터페이스를 설계한다.
-3. Execution Lead: 작업을 단계별로 쪼개고 의존성, 우선순위, 병렬 가능성을 정한다.
-4. QA / TDD Lead: 각 단계마다 검증 기준, 실패 확인, 통과 확인, 회귀 방지 방법을 붙인다.
-5. Risk / Handoff Owner: 리스크, 롤백, 보안, 프라이버시, 운영 부작용, 다음 작업자 인수인계를 명시한다.
+1. Product Strategist: Define why this work is being done and which success criteria it must satisfy.
+2. System Architect: Design the structure, boundaries, data flow, dependencies, and interfaces.
+3. Execution Lead: Break the work into steps and set dependencies, priorities, and parallelizability.
+4. QA / TDD Lead: Attach verification criteria, failure checks, pass checks, and regression prevention to each step.
+5. Risk / Handoff Owner: State risks, rollback, security, privacy, operational side effects, and the handoff to the next operator.
 
-중요:
+Important:
 
-- 구체적인 구현 코드를 바로 작성하지 마라. 먼저 계획 품질을 극대화하라.
-- 숨겨진 추론 과정은 출력하지 마라. 대신 판단 근거를 간결한 요약으로 제시하라.
-- 불확실한 내용은 추측으로 확정하지 말고 “Assumption”, “Open Question”, “Revisit Trigger”로 분리하라.
-- 계획은 멋있어 보이는 문서가 아니라 실행, 검증, 롤백, 인수인계가 가능한 계약서여야 한다.
+- Do not write concrete implementation code right away. First maximize the quality of the plan.
+- Do not output hidden reasoning. Instead, present the basis for each judgment as a concise summary.
+- Do not settle uncertain content by guessing; separate it into “Assumption”, “Open Question”, and “Revisit Trigger”.
+- A plan must be a contract that can be executed, verified, rolled back, and handed off, not a document that merely looks impressive.
 
 ---
 
 # INPUT
 
-사용자는 아래 형식 중 일부만 줄 수 있다. 비어 있는 항목은 합리적 기본값을 세우되, 중요한 불확실성은 명시하라.
+The user may give only part of the format below. Set reasonable defaults for empty items, but state important uncertainties.
 
 <TASK>
-사용자가 달성하려는 목표:
+The goal the user wants to achieve:
 {{USER_TASK}}
 </TASK>
 
 <CONTEXT>
-현재 상황, 기존 시도, 관련 파일, 참고 문서, 제약:
+Current situation, previous attempts, related files, reference documents, constraints:
 {{PROJECT_CONTEXT}}
 </CONTEXT>
 
 <STACK_OR_DOMAIN>
-기술 스택, 도메인, 플랫폼, 언어, 도구:
+Tech stack, domain, platform, language, tools:
 {{STACK_OR_DOMAIN}}
 </STACK_OR_DOMAIN>
 
 <CONSTRAINTS>
-시간, 비용, 보안, 정책, 품질, 배포, 호환성 제약:
+Time, cost, security, policy, quality, deployment, and compatibility constraints:
 {{CONSTRAINTS}}
 </CONSTRAINTS>
 
 <QUALITY_BAR>
-사용자가 원하는 수준:
-예: MVP, production-ready, enterprise-grade, research-grade, “20000억원 가치급”
+The level the user wants:
+e.g. MVP, production-ready, enterprise-grade, research-grade, “20000억원 가치급” (worth 2 trillion won)
 {{QUALITY_BAR}}
 </QUALITY_BAR>
 
@@ -63,40 +63,40 @@ disable-model-invocation: true
 
 ## 1. Context First
 
-먼저 사용자의 입력에서 다음을 추출한다.
+First, extract the following from the user's input.
 
-- 핵심 목표
-- 현재 상태
-- 명시된 요구사항
-- 암묵적 요구사항
-- 금지사항 / 비목표
-- 품질 기준
-- 관련 리소스, 파일, API, 시스템
-- 외부 의존성
-- 성공을 검증할 방법
-- 사용자가 아직 결정하지 않은 중요한 변수
+- Core goal
+- Current state
+- Stated requirements
+- Implicit requirements
+- Prohibitions / non-goals
+- Quality bar
+- Related resources, files, APIs, and systems
+- External dependencies
+- How success will be verified
+- Important variables the user has not decided yet
 
-입력이 부족해도 바로 멈추지 마라.  
-단, 다음 중 하나에 해당하면 “Blocking Question”을 최대 1개만 제시한다.
+Do not stop right away just because the input is insufficient.  
+However, present at most one “Blocking Question” only when one of the following applies.
 
-- 목표 자체가 상충한다.
-- 실행 위치나 대상이 전혀 불명확하다.
-- 보안상 위험한 행동이 필요할 수 있다.
-- 계획의 방향이 완전히 달라질 수 있는 핵심 선택지가 있다.
+- The goal itself is contradictory.
+- Where or on what to execute is completely unclear.
+- A security-risky action may be required.
+- There is a key choice that could change the direction of the plan entirely.
 
-그 외에는 합리적 가정을 세우고 계속 진행하라.
+Otherwise, set reasonable assumptions and continue.
 
 ---
 
 ## 2. Three-Layer Plan Model
 
-모든 계획은 다음 3개 층을 가져야 한다.
+Every plan must have the following three layers.
 
 ### Layer A: Strategic Plan
 
-왜 하는가, 무엇이 성공인가, 무엇을 하지 않는가.
+Why it is done, what counts as success, and what is not done.
 
-반드시 포함:
+Must include:
 
 - Goal
 - Non-goals
@@ -108,9 +108,9 @@ disable-model-invocation: true
 
 ### Layer B: Architecture / System Plan
 
-무엇이 어디에 속하고, 어떤 경계와 계약으로 움직이는가.
+What belongs where, and through which boundaries and contracts it operates.
 
-반드시 포함:
+Must include:
 
 - Domain model or conceptual model
 - System boundaries
@@ -123,13 +123,13 @@ disable-model-invocation: true
 
 ### Layer C: Execution Plan
 
-어떤 순서로, 누가, 무엇을, 어떻게 검증하며 진행하는가.
+In what order, who does what, and how it is verified as it proceeds.
 
-반드시 포함:
+Must include:
 
 - Milestones
 - Dependencies
-- Parallelizable 여부
+- Parallelizable or not
 - Required skills
 - Files/resources to create/modify/test
 - Completion criteria
@@ -143,17 +143,18 @@ disable-model-invocation: true
 
 ## 3. Plan Bundle Contract
 
-계획은 채팅 본문 하나로만 출력하지 않고, 하나의 master plan과 P-item별 독립 파일로 저장한다.
+Do not output the plan only as a single chat message; save it as one master plan and one independent file per P-item.
 
 ### Save location
 
-저장 위치는 다음 우선순위로 정한다.
+Determine the save location by the following priority.
 
-1. 사용자가 지정한 위치
-2. 저장소에 이미 존재하는 호환 가능한 plan 문서 규칙
-3. 기본값: `docs/plans/YYYY-MM-DD-<topic>/`
+1. The location the user specified
+2. If there is a folder that holds a design document (`design.md`), that folder (place `plan.md` and `items/` next to the design document)
+3. A compatible plan-document convention that already exists in the repository
+4. Default: `docs/plans/YYYY-MM-DD-<topic>/`
 
-기본 구조:
+Default structure:
 
 ```text
 docs/plans/YYYY-MM-DD-<topic>/
@@ -164,44 +165,46 @@ docs/plans/YYYY-MM-DD-<topic>/
     `-- ...
 ```
 
-규칙:
+Rules:
 
-- `<topic>`은 짧은 lowercase kebab-case로 작성한다.
-- `P0`, `P1`, ... 식별자는 실행 순서가 아니라 안정적인 작업 ID다. 순서는 dependency로 표현한다.
-- 파일명은 제목이 바뀌어도 링크가 깨지지 않도록 `P{number}.md`로 고정한다.
-- 각 `items/P{number}.md`에는 정확히 하나의 P-item만 둔다.
-- P-item을 추가하거나 제거할 때 기존 ID를 불필요하게 재번호화하지 않는다.
+- Write `<topic>` in short lowercase kebab-case.
+- The `P0`, `P1`, ... identifiers are stable work IDs, not an execution order. Express order through dependencies.
+- Fix file names as `P{number}.md` so links do not break when a title changes.
+- Put exactly one P-item in each `items/P{number}.md`.
+- When adding or removing a P-item, do not renumber existing IDs unnecessarily.
 
 ### Source of truth and references
 
-- `plan.md`는 전체 계획의 진입점이며 Strategic Plan, Architecture / System Plan, milestone index, 전체 dependency diagram, regression matrix, side-effect review, 공통 verification, handoff를 소유한다.
-- `items/P{number}.md`는 해당 작업의 상세 내용과 status, dependencies, files/resources, risk, rollback, completion criteria, TDD / validation steps의 Single Source of Truth다.
-- `plan.md`의 milestone index는 모든 P-item을 상대 링크로 참조해야 한다. P-item 본문 전체를 `plan.md`에 복제하지 않는다.
-- 각 P-item은 상단에서 `../plan.md`를 parent plan으로 참조하고, dependency가 있으면 같은 디렉토리의 해당 P-item 파일을 상대 링크로 참조한다.
-- master의 dependency diagram과 regression matrix처럼 전체 조망을 위해 필요한 파생 정보는 허용하되, P-item 변경 시 같은 작업에서 동기화한다.
-- 절대 경로, `file://` URI, 채팅 전용 참조를 문서 간 링크에 사용하지 않는다.
-- 최종 응답에는 `plan.md` 링크와 생성된 P-item 개수만 간결하게 제시하고, 파일 본문 전체를 다시 붙여 넣지 않는다.
+- `plan.md` is the entry point of the overall plan and owns the Strategic Plan, the Architecture / System Plan, the milestone index, the overall dependency diagram, the regression matrix, the side-effect review, common verification, and the handoff.
+- `items/P{number}.md` is the Single Source of Truth for that task's details and its status, dependencies, files/resources, risk, rollback, completion criteria, and TDD / validation steps.
+- The milestone index in `plan.md` must reference every P-item with a relative link. Do not duplicate the full body of a P-item in `plan.md`.
+- Each P-item references `../plan.md` as its parent plan at the top and, when it has dependencies, references the corresponding P-item files in the same directory with relative links.
+- Derived information needed for the overall view, such as the master's dependency diagram and regression matrix, is allowed, but synchronize it in the same work whenever a P-item changes.
+- Do not use absolute paths, `file://` URIs, or chat-only references for links between documents.
+- In the final response, present only the `plan.md` link and the number of P-items created, concisely, and do not paste the full file contents again.
 
 ### Bundle creation order
 
-1. 전체 범위를 인벤토리화하고 P-item 경계를 정한다.
-2. 안정적인 P-ID와 dependency를 확정한다.
-3. 각 `items/P{number}.md`를 작성한다.
-4. 모든 P-item을 참조하는 `plan.md`를 작성한다.
-5. 링크, ID, dependency, 누락 여부를 검증한다.
+1. Inventory the full scope and set the P-item boundaries. For a feature implementation plan, the item boundaries and order follow the feature implementation flow document of code-principles (`references/feature-implementation-flow.md`): one base work item, thin vertical slices that each run from an entry point to storage, and a pre-exposure gate item last.
+2. Fix stable P-IDs and dependencies.
+3. Write each `items/P{number}.md`.
+4. Write `plan.md`, referencing every P-item.
+5. Verify links, IDs, dependencies, and omissions.
 
 ---
 
 ## 4. Plan Item Contract
 
-각 작업 항목은 반드시 독립된 `items/P{number}.md` 파일에서 아래 계약을 따른다.
+Each work item must follow the contract below in its own independent `items/P{number}.md` file.
+
+Put the five fields `Entry point`, `Design decisions`, `Concern check`, `Behavior list`, and `Claim (at completion)` only in feature slice items that have an entry point. Do not put them in items that change only documents or configuration, or in the base work item. Make the pre-exposure gate item the last item in the same format, but write `Readiness level` (one line: how ready it is for users to start using it openly) instead of `Design decisions`, and list in its completion criteria the readiness items and each item's prerequisites. Write follow-up work after release in the Revisit triggers of `plan.md`, not in that item.
 
 ```markdown
 # [P{number}] {Task Name}
 
 Parent plan:
 
-- [전체 계획](../plan.md)
+- [Overall plan](../plan.md)
 
 Status:
 
@@ -209,15 +212,15 @@ Status:
 
 Purpose:
 
-- 이 작업이 왜 필요한지 한 문장으로 설명한다.
+- Explain in one sentence why this task is needed.
 
 Goal linkage:
 
-- 어떤 Goal 또는 Success Criteria를 만족하는지 연결한다.
+- Link which Goal or Success Criteria it satisfies.
 
 Dependencies:
 
-- depends_on: [] 또는 [[P0](P0.md), [P1](P1.md), ...]
+- depends_on: [] or [[P0](P0.md), [P1](P1.md), ...]
 - parallelizable: true/false
 
 Required skills:
@@ -230,6 +233,32 @@ Boundary mapping:
 - Implementation boundary:
 - Out-of-scope adjacent behavior:
 - Regression scenarios:
+
+Entry point:
+
+- One of HTTP, Scheduler, Batch, Consumer, Listener, Screen. This value determines the shape of the outer-loop test and the transaction owner.
+
+Design decisions:
+
+- Write only the values decided at design time. Do not copy rule text.
+- Transaction boundary: Up to which step is one atomic unit. If there is an external call, whether that call comes before or after the atomic unit, and the reason if it is placed inside. The state left behind, and how it is handled, when the call fails or its result is unknown at that position. For how the boundary is opened, only the value, in the terms of the technical rules.
+- Failure meaning: For each failure, its classification (business failure, technical failure), error code, response status, and the state left behind (atomic-unit rollback or compensation).
+- Log points:
+- Authorization check:
+- Domain promotion: none, or yes (promotion condition number)
+- Entry-point specifics: Values decided per entry point, such as the idempotency key, retry classification, and chunk size
+
+Concern check:
+
+- Change type triggers: The change-type triggers this slice fires
+- Applied: Every always-on item and every fired trigger item, listed by rule title without omission
+- Intentionally excluded (reason):
+
+Behavior list:
+
+- For each item: number, kind (normal, failure, boundary, atomicity), the behavior in one line, the representative partition, and one line on what is guaranteed under which hypothesis when it passes. Do not write implementation structure.
+- The first normal item is the outer-loop test of TDD step 1. Turn only one item into a test at a time.
+- Plan writing drafts it. Items revealed during implementation are only appended by plan execution, marked "(added during execution)". Preserving existing behavior is the job of Regression scenarios in Boundary mapping. Do not add a status column.
 
 Files / Resources:
 
@@ -244,84 +273,92 @@ Difficulty:
 
 Risk:
 
-- 가장 큰 실패 가능성을 적는다.
+- Write the biggest possibility of failure.
 
 Rollback:
 
-- 이 작업이 실패했을 때 되돌리는 방법을 적는다.
+- Write how to revert when this task fails.
 
 Completion criteria:
 
-- [ ] 측정 가능한 완료 조건 1
-- [ ] 측정 가능한 완료 조건 2
-- [ ] 측정 가능한 완료 조건 3
+- [ ] Measurable completion criterion 1
+- [ ] Measurable completion criterion 2
+- [ ] Measurable completion criterion 3
 
 TDD / Validation steps:
 
 1. Failing probe or failing test:
+   - Outer boundary test: Which test at which boundary (feature slice items)
    - Command/check:
-   - Expected before implementation:
+   - Expected before implementation: For feature slice items, the assertion failure message (a compile error or build failure is not red). For other items, the value observed before the change
 2. Minimal implementation:
    - Action:
 3. Passing verification:
    - Command/check:
    - Expected after implementation:
 4. Regression lock:
-   - 무엇이 다시 깨지지 않게 잠기는가?
+   - What is locked so that it does not break again?
+
+Claim (at completion):
+
+- Covered specification items: Numbers from the Behavior list
+- Hypotheses relied on:
+- Risks not verified:
+- Plan writing leaves these three lines empty, and plan execution fills them when marking the item complete.
 
 Notes:
 
-- 중요한 판단, 제한, 주의사항.
+- Important judgments, limits, and cautions.
 ```
 
 ---
 
 ## 5. Anti-Vagueness Rules
 
-다음 표현은 금지하거나 즉시 구체화하라.
+Forbid the following expressions or make them concrete immediately.
 
-금지:
+Forbidden:
 
-- “구현한다”
-- “연동한다”
-- “최적화한다”
-- “테스트한다”
-- “보안 고려”
-- “필요시”
-- “나중에”
+- “구현한다” (implement)
+- “연동한다” (integrate)
+- “최적화한다” (optimize)
+- “테스트한다” (test)
+- “보안 고려” (consider security)
+- “필요시” (if needed)
+- “나중에” (later)
 
-대체:
+Replace with:
 
-- 무엇을 생성/수정/삭제하는가
-- 어느 파일/모듈/API/DB/도구가 관련되는가
-- 어떤 입력과 출력이 있는가
-- 어떤 명령이나 체크로 통과를 확인하는가
-- 실패하면 어떤 상태가 되며 어떻게 복구하는가
-- 지금 하지 않는 것은 무엇인가
+- What is created, modified, or deleted
+- Which file, module, API, DB, or tool is involved
+- What the inputs and outputs are
+- Which command or check confirms that it passes
+- What state results on failure and how it is recovered
+- What is not done now
 
 ---
 
 ## 6. Missing-Work Prevention
 
-긴 작업이나 대용량 문서, 여러 모듈이 있는 작업은 반드시 누락 방지 전략을 포함한다.
+Long work, large documents, and work that spans several modules must include a missing-work prevention strategy.
 
-포함할 것:
+Include:
 
-- 전체 범위 인벤토리 방식
-- 청크 또는 모듈 분할 기준
-- 각 청크/모듈의 순서 번호
-- `plan.md`의 P-item 링크를 통해 각 파일의 처리 상태를 추적하는 방식
-- 실패한 청크만 재시도하는 방법
-- 최종 병합 방식
-- 누락 검증 체크리스트
+- How the full scope is inventoried
+- The criteria for splitting into chunks or modules
+- A sequence number for each chunk/module
+- How each file's processing status is tracked through the P-item links in `plan.md`
+- How to retry only the failed chunks
+- The final merge method
+- A checklist for verifying nothing is missing
 
 ---
 
 ## 7. Context Ledger Requirement
 
-장기 실행, 에이전트, 자동화, 플러그인, 다단계 구현 계획에는 반드시 관찰 가능한 상태 저장소를 설계한다.
+Long-running, agent, automation, plugin, and multi-step implementation plans must design an observable state store.
 
-포함할 것:
+Include:
 
 - state
 - events
@@ -331,48 +368,48 @@ Notes:
 - cancellation / resume state
 - user intervention requests
 
-규칙:
+Rules:
 
-- 숨겨진 추론 과정은 저장하지 않는다.
-- 저장되는 것은 관찰 가능한 이벤트, 요약, 도구 호출, 결과, 상태 변경뿐이다.
-- 사용자가 중간에 “지금 어디까지 됐어?”라고 물으면 답할 수 있어야 한다.
+- Do not store hidden reasoning.
+- Only observable events, summaries, tool calls, results, and state changes are stored.
+- If the user asks midway, “How far along is it now?”, it must be possible to answer.
 
 ---
 
 ## 8. Progressive Context / Skill Loading
 
-사용 가능한 문맥이 많을 때는 전부 읽지 말고 점진적으로 로드한다.
+When a lot of context is available, do not read all of it; load it progressively.
 
-우선순위:
+Priority:
 
-1. 사용자가 이번 요청에서 직접 제공한 컨텍스트
-2. 현재 작업 디렉토리 또는 현재 대화의 명시적 지시
-3. 상위 범위의 정책/프로젝트 지시
-4. 관련 skill catalog 또는 문서 목록
-5. 실제 필요한 순간의 상세 문서 또는 SKILL.md
+1. Context the user provided directly in this request
+2. Explicit instructions in the current working directory or the current conversation
+3. Higher-scope policy/project instructions
+4. The relevant skill catalog or document list
+5. The detailed document or SKILL.md at the moment it is actually needed
 
-규칙:
+Rules:
 
-- 모든 skill/document body를 무작정 읽지 않는다.
-- 어떤 컨텍스트를 사용했는지 기록한다.
-- 충돌하는 지시는 우선순위와 이유를 명시한다.
+- Do not read every skill/document body indiscriminately.
+- Record which context was used.
+- For conflicting instructions, state the priority and the reason.
 
 ---
 
 ## 9. Output Format
 
-최종 산출물은 반드시 `plan.md`와 P-item 파일들로 나눈다.
+The final deliverable must be split into `plan.md` and P-item files.
 
 ### Master file: `plan.md`
 
-`plan.md`는 아래 구조를 따른다.
+`plan.md` follows the structure below.
 
 ```markdown
 # {Plan Title}
 
 ## 1. Executive Summary
 
-- 한 문단으로 목표, 접근법, 핵심 리스크, 성공 기준을 요약한다.
+- Summarize the goal, approach, key risks, and success criteria in one paragraph.
 
 ## 2. Extracted Context
 
@@ -418,13 +455,13 @@ Notes:
 | [P0 - {Task Name}](items/P0.md) | ... | - | true/false |
 | [P1 - {Task Name}](items/P1.md) | ... | [P0](items/P0.md) | true/false |
 
-모든 P-item을 빠짐없이 나열하되 상세 계약은 각 링크의 파일에만 작성한다.
+List every P-item without omission, but write the detailed contract only in each linked file.
 
 ## 7. Dependency Diagram
 
-텍스트 다이어그램으로 표시한다.
+Show it as a text diagram.
 
-예:
+Example:
 P0 -> P1
 P1 -> P2
 P1 -> P3
@@ -455,44 +492,46 @@ P2, P3 -> P4
 
 ## 12. Self-Audit Before Final
 
-아래 항목을 점검하고 부족한 부분을 보강한 뒤 최종 답변한다.
+Check the items below, reinforce whatever is lacking, and then give the final answer.
 
-- [ ] 모든 Success Criteria가 검증 방법을 가진다.
-- [ ] 모든 P-item이 독립된 `items/P{number}.md` 파일 하나에만 존재한다.
-- [ ] `plan.md`가 모든 P-item을 상대 링크로 참조하고 P-item 본문을 중복하지 않는다.
-- [ ] 모든 P-item이 parent plan, dependency, risk, rollback, validation을 가진다.
-- [ ] 모든 P-ID가 유일하고 모든 dependency 링크가 실제 파일로 해석된다.
-- [ ] orphan P-item과 끊어진 링크가 없다.
-- [ ] 모든 중요한 제약이 Scope Guard에 반영되었다.
-- [ ] 누락 방지 전략이 있다.
-- [ ] 회귀 매트릭스가 있다.
-- [ ] 검증 명령 또는 체크가 있다.
-- [ ] hidden reasoning을 노출하지 않는다.
-- [ ] 불확실성은 Assumption/Open Question으로 분리했다.
-- [ ] 바로 다음 작업자가 실행 가능한 수준이다.
+- [ ] Every Success Criterion has a verification method.
+- [ ] Every P-item exists in exactly one independent `items/P{number}.md` file.
+- [ ] `plan.md` references every P-item with a relative link and does not duplicate P-item bodies.
+- [ ] Every P-item has a parent plan, dependencies, risk, rollback, and validation.
+- [ ] Every P-ID is unique and every dependency link resolves to a real file.
+- [ ] There are no orphan P-items and no broken links.
+- [ ] Every important constraint is reflected in the Scope Guard.
+- [ ] There is a missing-work prevention strategy.
+- [ ] There is a regression matrix.
+- [ ] There are verification commands or checks.
+- [ ] Hidden reasoning is not exposed.
+- [ ] Uncertainty is separated into Assumption/Open Question.
+- [ ] It is at a level the next operator can execute immediately.
+- [ ] Every feature slice item has `Design decisions`, `Concern check`, and `Behavior list` filled with values.
+- [ ] If it is a feature implementation plan, the last item is the pre-exposure gate.
 ```
 
 ### P-item files: `items/P{number}.md`
 
-- P0부터 각 작업을 위의 “Plan Item Contract” 형식으로 별도 파일에 작성한다.
-- master에 없는 P-item 파일이나 파일이 없는 milestone 항목을 만들지 않는다.
-- 공통 설명을 반복하지 말고 필요한 master section으로 링크한다.
-- 작업 실행자는 `plan.md`를 먼저 읽은 뒤 실행할 P-item 파일을 읽는다고 가정한다.
+- Write each task, starting from P0, in a separate file in the “Plan Item Contract” format above.
+- Do not create a P-item file that is not in the master, or a milestone entry that has no file.
+- Do not repeat common explanations; link to the needed master section.
+- Assume the executor reads `plan.md` first and then reads the P-item file to execute.
 
 ---
 
 # RESPONSE STYLE
 
-- 한국어로 작성한다.
-- 사용자가 원하지 않는 한 장황한 이론 설명을 하지 않는다.
-- 계획서는 구체적이어야 하지만, 구현 코드는 요청받기 전까지 최소화한다.
-- 판단이 필요한 부분은 단정하지 말고 “권장 기본값”과 “재검토 조건”으로 제시한다.
-- 사용자가 “20000억원 가치급”을 요구하면, 과장된 마케팅 문구가 아니라 다음 기준을 만족하는 계획으로 해석한다.
-  - 실행 가능성
-  - 검증 가능성
-  - 확장 가능성
-  - 운영 가능성
-  - 실패 복구 가능성
-  - 인수인계 가능성
-  - 보안/프라이버시 고려
-  - 컨텍스트 추적 가능성
+- Write in Korean.
+- Unless the user wants it, do not give lengthy theoretical explanations.
+- The plan must be concrete, but keep implementation code to a minimum until it is requested.
+- Where judgment is needed, do not assert; present it as a “recommended default” (권장 기본값) and a “revisit condition” (재검토 조건).
+- When the user asks for “20000억원 가치급” (worth 2 trillion won), interpret it not as exaggerated marketing copy but as a plan that meets the following criteria.
+  - Executability
+  - Verifiability
+  - Extensibility
+  - Operability
+  - Failure recoverability
+  - Handoff readiness
+  - Security/privacy consideration
+  - Context traceability

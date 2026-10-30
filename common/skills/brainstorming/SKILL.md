@@ -30,17 +30,17 @@ Start by understanding the current project context, then ask questions one at a 
 - Break it into sections of 200-300 words
 - Ask after each section whether it looks right so far
 - Cover: architecture, components, data flow, error handling, testing
+- When a screen, layout, or flow diagram would communicate better than text, follow the optional steps in `visual-companion.md`
 - Be ready to go back and clarify if something doesn't make sense
 
 ## After the Design
 
 **Documentation:**
-- Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design to `docs/plans/YYYY-MM-DD-<topic>/design.md`; the plan bundle for it is written into that same folder later
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
 
-**Implementation (if continuing):**
-- Ask: "Ready to set up for implementation?"
+**Handoff:**
+- Close with one line: the next step is for the user to invoke the planning skill (writing-plans) with this design document's path. Do not invoke it yourself; it is user-invoked only.
 
 ## Key Principles
 
