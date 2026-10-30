@@ -1,6 +1,6 @@
 ---
 name: mcp-tool-prompt-design
-description: Design, implement, modify, or review MCP tools and their separation from system/developer prompts. Use for tool boundaries, descriptions, input/output contracts, and shared instruction ownership. Excludes standalone deployment, transport troubleshooting, and authentication operations that do not change these contracts.
+description: Design, implement, modify, or review MCP tools and their separation from system/developer prompts. Use for tool boundaries, descriptions, input/output contracts, shared instruction ownership, and how a host makes server instructions and result meanings visible to the model. Excludes standalone deployment, transport troubleshooting, and authentication operations that do not change these contracts.
 ---
 
 # MCP 도구·프롬프트 설계
@@ -49,10 +49,24 @@ MCP는 도구·문맥을 연결하는 프로토콜이다. 상위 에이전트 �
 
 업무 의미의 원본과 모델에게 보이는 표현을 구분한다. 원본을 다른 지침에 독립적으로 복제하지 않되, 모델이 올바르게 선택·해석하는 데 필요한 의미는 실제로 볼 수 있어야 한다.
 
-- 필드·enum·단위의 의미를 출력 스키마에서 설명한다. 호스트가 `outputSchema`를 모델에게 전달하는지는 필요한 경우 확인한다.
-- 해당 설명이 모델에게 보이지 않으면 의미가 드러나는 구조화 결과나 짧은 설명으로 전달한다. 이를 별도로 변경 가능한 두 번째 계약으로 만들지 않는다.
+**소유.** 결과 필드의 뜻은 서버가 소유한다. 어떤 호스트가 어떻게 전달하든 소유자는 바뀌지 않는다.
+
+- 필드·enum·단위의 의미를 출력 스키마에서 설명한다. 이 설명이 결과 필드 뜻의 원본이다.
+- 명세는 출력 스키마를 구조화 결과의 검증용으로, 서버 지침을 클라이언트가 선택적으로 쓰는 힌트로 두고, 모델에게 넘길지는 호스트에 맡긴다. 그래서 모델의 선택이나 해석을 바꾸는 핵심 뜻은 모든 호스트가 전달하는 도구 설명이나 뜻이 드러나는 결과 값에도 둔다. 예: 빈 결과와 미실행의 차이, 어느 이용자 조건을 기준으로 쓴 안내인지.
+- 이 표현은 서버 코드 안의 같은 원본에서 파생한다. 따로 고칠 수 있는 두 번째 계약으로 만들지 않는다.
 - 큰 도메인 사전은 필요할 때 읽을 원본이나 리소스로 연결한다. 작은 계약을 여러 리소스로 분산하지 않는다.
-- 상위 지침에 상태 코드 사전을 만들거나, 모델에게 뜻을 알 수 없는 원시 코드만 반환하지 않는다. 모델이 보는 정보와 서버가 검사하는 계약을 혼동하지 않는다.
+
+**전달.** SDK나 호스트가 서버 지침이나 출력 스키마를 모델에게 넘기지 않으면 호스트가 전달을 맡을 수 있다. 전달은 소유를 옮기지 않는다.
+
+- 실행 시점에 서버에서 받은 원문을 편집, 요약, 추가 없이 싣고 어느 서버의 것인지 표시한다.
+- 상위 지침이 이 원문을 가리킬 때는 담는 위치(블록이나 섹션 이름)가 아니라 소유자를 주어로 쓴다. 예: "결과 필드의 뜻은 각 MCP 서버가 공개한 출력 스키마를 따른다." 상위 지침에는 그 뜻을 언제, 어떻게 말할지 같은 표현 규칙만 둔다.
+- 상위 지침에 상태 코드 사전을 만들거나, 모델에게 뜻을 알 수 없는 원시 코드만 반환하지 않는다.
+
+**가시성 확인.** 모델이 무엇을 보는지는 기대나 이름이 아니라 실제 경로로 판단한다.
+
+- 모델 입력 경로(도구 정의, 지침, 입력 메시지, 도구 결과)를 코드나 실제 전송 요청으로 추적한다. 호스트가 화면이나 기록용으로 만든 파생 데이터는 따로 넣지 않는 한 모델이 보지 않는다. 모델이 보는 정보와 서버가 검사하는 계약도 혼동하지 않는다.
+- 전달하지 않는 것과 전달할 수 없는 것을 구분한다. 프로토콜과 API가 허용하는지, 사용하는 SDK나 호스트의 기본 동작인지, 현재 코드가 하는지를 따로 본다. 예: MCP 도구를 함수 도구로 바꿀 때 이름, 설명, 입력 스키마만 넘기는 SDK가 있다. 이는 기본 동작일 뿐 불가능이 아니다.
+- 요청에 실린 것과 모델이 해석에 쓰는 것을 구분한다. API에 도구 출력 스키마 칸이 있어도 모델이 그 설명을 읽는다는 보장은 아니다. 설계가 이 차이에 달려 있으면 공식 자료로 확인하고, 자료가 없으면 이미 보이는 채널(도구 설명 등)을 대조군으로 둔 작은 관찰로 확인한다. 확인하기 전에는 가시성을 전제로 권고하지 않는다.
 
 ## 입력 계약
 
