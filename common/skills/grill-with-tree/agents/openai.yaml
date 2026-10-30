@@ -1,3 +1,5 @@
 interface:
   display_name: "Grill with Tree"
   short_description: "Explore decisions through a persistent, navigable tree"
+policy:
+  allow_implicit_invocation: true

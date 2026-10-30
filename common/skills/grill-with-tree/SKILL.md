@@ -1,227 +1,255 @@
 ---
 name: grill-with-tree
-description: Sharpen a plan or design through a persistent decision tree. Choose necessary questions across the current and next depth, provide concrete recommendations, and update only the affected parts of the tree.
+description: Use only when the user directly invokes grill-with-tree, or when continuing an interview that is already running with this skill.
 ---
 
 # Grill with Tree
 
-Build a shared understanding through an evolving decision tree.
-Keep the overall subject and main decision axes visible while examining
-individual decisions.
+Run a decision interview from the first map to the final consolidation, and keep every decision in a persistent decision tree document. Read `../grilling/SKILL.md` and follow it; this skill sets the question order, the tree, and the stages around the interview.
 
-Read `../grilling/SKILL.md` and apply its rules for contextual recommendations,
-fact-finding, user decisions, and final consolidation.
+Conduct and record the interview. Do not carry out the plan being discussed.
 
-This skill controls question count, exploration order, document management,
-resuming, and pausing. These rules replace the underlying skill's
-one-question-at-a-time and automatic branch-by-branch traversal rules.
+## Stages
 
-Conduct and document the interview. Do not execute the product or plan
-being discussed.
+1. Start: draft, widen perspectives, show the map, expand each axis, then decide each candidate. Read [Starting a Tree](references/starting-a-tree.md) in full whenever you create a new tree.
+2. Interview: the turn loop and the tree document below.
+3. Split and graph: Read [Splitting and Graph View](references/splitting-and-graph.md) in full when a split signal appears or the user asks to see the tree as a graph.
+4. Consolidation and after: see Finishing. Read [Changes After Consolidation](references/after-consolidation.md) in full when a decision that already has a design document changes.
 
-## Decision nodes
+Read [Subagents](references/subagents.md) in full before you spawn an agent for the interview and when an agent's result arrives. Read a stage reference again each time you enter its stage; compaction can drop it.
 
-A node represents one decision that can be answered, settled, or reconsidered
-independently.
+## Each turn
 
-Its title and content together must make clear what it decides.
-Keep that decision boundary stable unless the discussion actually changes it.
+Go through these steps in order. Korean labels and phrases in this skill are literal: write them exactly as shown (see Labels and terms).
 
-A child node refines a decision within its parent's context.
-A prerequisite is a decision or fact that must be resolved before another
-decision can be answered. Related subject matter alone establishes neither
-relationship.
+### 1. Reload what the turn needs
 
-A parent decision may constrain its children without answering them.
-Settling a parent does not settle its descendants or prevent further expansion.
+- When resuming, or when this skill, the base skill, or a recorded domain skill is no longer in context (for example after compaction), load it again before replying.
+- When resuming, read the `현재 상태` block at the top of the tree first, then find open and blocked decisions by searching for their statuses.
+- Load domain skills yourself when the tree is created, when a new axis opens, and when the topic changes. List what the interview decides (code in a language or framework, data, screens, contracts, module structure), pick the available skills whose descriptions own rules for those artifacts, load them the way the harness loads skills, and record them on the `불러온 영역 스킬` line. Load them even in a turn that writes no code: the recommendations decide what gets built, and the rule check in step 5 sees only loaded skills. When no skill fits, research best practice as step 5 describes.
 
-Each node may have zero, one, or many children.
-Branches may have different widths and depths.
+### 2. Read the answer
 
-Create another node when there is another independently answerable decision.
-Do not turn explanatory paragraphs into nodes merely to shorten the text.
-Place new nodes under the decision they actually refine, not automatically
-under the most recently answered node.
+- Decide which decisions the reply actually answers or changes. Separate explicit decisions, verified facts, and your own interpretation, and record them as `사용자 결정(...)`, as facts with their source, and as `모델의 해석(사용자 확인 전):`.
+- A reply phrased as a question is never a decision, whatever it suggests.
+  - Asking back: answer, add one line with the question and your answer to that node, keep its status, and present the same question again.
+  - A counter-proposal or alternative in question form: restate it in its strongest form, compare it with your recommendation by the same criteria, say whether your recommendation changes and why, and present the same question again.
+  - A request to recommend again or to research: research, then present the same question with the revised recommendation.
+- Silence, your recommendation, and moving elsewhere are not agreement.
+- When the answer directly settles another decision, leaving it no real choice, settle that one in the same turn: write `따라 정함(<date>): <decision> 결정에서` in its node and report it on the `이렇게 적었습니다:` line. When the answer only narrows another decision's candidates, keep that decision open and recommend from what remains.
+- A parent's status follows its own decision only, never its children's.
+- When a later decision would rest on a recorded `모델의 해석(사용자 확인 전):`, ask that interpretation as a decision question first.
+- An item the user adds as a question, a counter-question, or a request to think about it ("생각해 봐") is wanted now: check it for overlap, add it, and ask it first; a question that was waiting is presented again later. An item the user only mentions is checked for overlap, added as an open node, and asked in the usual order.
+- A request about how to run this interview ("이 인터뷰에서는 …") goes on a `진행 약속` line and holds until the interview ends. Save it to permanent memory only when the user asks for that. When it reads as a request to change this skill, ask that as a decision question.
+- Treat messages that arrive while you work the same way, and choose the question again if the pending one changed.
 
-## Building and maintaining the tree
+### 3. Record and propagate
 
-Derive the main decision axes from the conversation and relevant materials.
-Incorporate decisions already made and briefly show the initial map.
-Do not ask the user to construct the map or repeat known information.
+- Use four statuses: `open`, `blocked`, `settled`, `withdrawn`.
+  - `blocked` holds only while a decision named on a `선행:` line is not settled; switch to `open` once all of them are. A prerequisite that applies only under a condition is written with its condition in the body and does not block. A missing fact does not block; find it yourself.
+  - A decision asked and answered "no" is settled with `거절` and its reason. `withdrawn` is for a decision whose premise disappeared; keep the reason.
+  - A decision moved out of this scope to later work is settled, with where it went.
+- Only withdrawal propagates, and only downward: withdraw the descendants of a withdrawn parent with `부모 철회에 따름(<date>)`, and move a descendant that is still needed under its proper parent with `옮김(<date>): <old parent> → <new parent>`.
+- When a decision changes:
+  1. Keep the old decision in its node: write the new one on top and put `대체됨(<date>): <reason>` before the old one.
+  2. Find what rests on it: run `impact <ID>`, which covers `선행:` lines, mentions, and children, and also check tables and prose that describe it without the ID.
+  3. Reopen decisions whose premise actually changed, fix only the wording where only the wording is stale, and leave the rest. Report reopened decisions in one line before the next question.
+- When a decision is made, handle the decisions that point to it the same way and switch the ones it unblocks to `open`. When it rules out candidates elsewhere ("no target date", "excluded from this scope", "no subagents"), add a line pointing to it under `지킬 조건`, search the whole tree once by its topic words for decisions it contradicts, and check every later recommendation against that list.
+- Before creating a node, write in one sentence what it decides and compare it only with its parent and siblings. Do not create it when the parent already decided it (reopen the parent if that must change); merge it into a sibling that decides the same thing; write the boundary into both bodies when they partly overlap. Report the fix in one line.
+- Delete a node only when it was created by mistake, such as a duplicate, has no children, nothing points to it (`impact`), and holds no decision record. Note the deletion in `세션 기록`.
+- Edit in place. Create the document once, read the affected nodes and their boundaries before editing, change only the affected text and statuses, and never regenerate the document or a subtree or rebuild it from memory. Run `check` after editing; fix every error, and fix warnings only on lines you wrote or touched.
 
-The initial map may be incomplete. Expand it as meaningful decisions emerge.
-Do not let a newly discovered detail silently replace the overall subject.
+### 4. Choose one question
 
-Maintain one persistent Markdown document.
-Use the user's specified location; otherwise use the environment's designated
-output directory or `outputs/` in the current workspace.
+- Ask one decision question per turn, with one recommendation.
+- Run `next`, and choose in this order:
+  1. An unsettled prerequisite of the decision you would ask.
+  2. Within the current axis, the shallowest undecided decision; siblings come before their children.
+  3. When the current axis has nothing answerable now, the next axis.
+- A decision the user names comes first. When they name an undecided node, ask that decision itself, not its descendants.
+- Ask only what can be answered now. Look facts up yourself instead of asking for them.
 
-Identify each node with a stable ID, status, and short human-readable title.
-Use nested Markdown lists to represent the hierarchy.
+### 5. Build the recommendation
 
-Write the content beneath each node naturally, at the length needed to preserve
-its unresolved issue, accepted decision, and relevant context.
-Include rationale, alternatives, dependencies, uncertainties, or sources when
-they help explain the decision.
+- Recommend the option you judge best, as a concrete example, not a safe middle. Do not fix the size of the solution in advance: compare small and fundamental options side by side, and prefer the simpler one only when they come out about even.
+- Think in this order before recommending. These are steps of thought, not sections of the reply: go deeper on core decisions, and show only what changed the judgment.
+  1. Set the purpose and the criteria for this decision from the user's goals, the parent decisions, and `지킬 조건`.
+  2. Check facts and outside evidence. Inspect the current state directly. Look up the outside facts the decision rests on (behavior of tools and standards, specifications), best practice, and precedents, starting from primary sources: official documentation, standards, original papers, the original author. Always look them up for core decisions and for decisions that rest on outside facts; for the rest, when unsure. Record what you found as verified facts with date and source, and mark what rests on memory as `확인 전`. Do this research yourself, since the next question depends on it.
+  3. Lay out at least three distinct options: as is, small, fundamental, the user's, a precedent's.
+  4. Compare effect, total cost to build, run, and change, difficulty of reversal, and conflicts with `지킬 조건`.
+  5. Drop options that lose on every count, and pick the one that makes the biggest difference to the purpose; when it is close, pick the one that is easier to reverse and simpler.
+  6. Test it against the strongest objection. If the user argued the opposite, check that the same evidence still leads to the same conclusion.
+  7. State what it loses, how well it is verified, and what would overturn it.
+- Check rules before recommending: this skill, the base skill, the domain skills loaded in this session, and the project and global instructions. Decisions inside the tree are checked through `지킬 조건`.
+  - Add a `규칙과의 관계:` line only when the recommendation touches a rule, with one of `일치`, `구체화`, `바꿈(<rule>)`, `이번만 예외`.
+  - When it is unclear whether a rule applies here, make that the decision question instead of applying or skipping the rule silently.
+  - When a decision departs from a rule, write `규칙 예외: <rule>, <why>` in its node, report it on the next `이렇게 적었습니다:` line, and add it to `지킬 조건` when it rules out other decisions' candidates.
 
-Field labels are optional. There is no one-line limit and no mandatory
-`Question / Decision / Rationale` template.
+### 6. Present the question
 
-For example:
+- Write the recommendation into the node as `추천(<date>):` before presenting it. When it changes, add a new `추천(<date>):` line.
+- Reply in this order:
+  1. Notices, starting with `이렇게 적었습니다:`: what was decided, settled as derived, merged or pruned, reopened, reframed, or excepted from a rule. Leave it out when there is nothing to report.
+  2. The marker `[현재노드-<ID>-<short title>]`.
+  3. A mini tree in a code block.
+  4. The question as one self-contained sentence.
+  5. One recommendation, its reasons, and what it loses.
+  6. `규칙과의 관계:` only when a rule is touched.
+- The mini tree shows the axis of the current decision, the decisions directly under that axis, the line down to the current decision, and its siblings. Write titles without IDs, follow each with its status in English, and mark the current decision `▶ <title> ← 지금 질문`. When the axis holds many decisions, collapse the settled ones into one line such as `정한 결정 4개`.
+- The question is the decision itself. Do not put the node title in its place, ask the user to approve your recommendation, or ask approval for a map or route ("이 지도로 시작할까요?").
+- Show only the context the question needs; do not repeat the whole tree. The content and length of the reasons, and the choice of list or table, are free.
+
+### 7. Update the current state
+
+Overwrite the `현재 상태` block on every reply. It holds `작업 위치`, `최근 제시한 질문`, `지킬 조건`, `진행 약속`, `불러온 영역 스킬`, and `최종 정리 뒤 다시 엶(<date>)` after a reopening. Do not list open decisions or waiting questions there; statuses and `추천(<date>):` lines already hold them. Add dated lines to `세션 기록` at the bottom in time order.
+
+### When the frame changes
+
+When an answer changes the frame itself (a corrected premise, a corrected term, a counter-question that overturns the framing), realign the boundaries and titles of the affected axes and nodes to the user's words, separately from recording the answer. Keep the old frame as `대체됨` and report the realignment on the `이렇게 적었습니다:` line. Do not edit wording only to make it match.
+
+### When an axis closes
+
+In the turn that settles the last decision of a top-level axis, add three notices before the next question: what the axis decided, in three lines or fewer; one progress line with the axes closed out of the total and the open and blocked counts, counted with `map` at that moment; and the sentence `빠진 결정이 보이면 말씀해 주세요.`
+
+## Red flags
+
+These thoughts come right before the most common mistakes.
+
+| Thought | Instead |
+|---|---|
+| "These two questions are independent, so I can ask both." | Ask one; the other waits its turn. |
+| "Their alternative is as good as mine, so I'll record it." | A question-form reply is not a decision: compare, then ask the same question again. |
+| "I answered what they asked, so this turn is done." | Present the same decision question again. |
+| "It ends in a question, but it only flags a missing decision; it can wait its turn." | An item raised as a question is asked first. |
+| "Settling that one too would treat one answer as permission for another decision." | If the answer leaves it no choice, settle it with `따라 정함` and report it; if it only narrows the candidates, keep it open. |
+| "This turn writes no code, so the domain skills don't apply." | Load them; the recommendations become the code. |
+| "A simple, safe option is enough here." | Compare small and fundamental options and recommend the best. |
+| "This axis looks unnecessary, so I'll drop it before the map." | Prune only clear nonsense, and report what you pruned once, outside the tree. |
+| "I'll ask which axes to keep." | Show the map; the user adds or removes axes whenever they like. |
+| "This preference should last, so I'll save it to memory." | Write a `진행 약속` line; use memory only when asked. |
+| "The ID search found nothing else, so nothing else is affected." | Search by topic words too, and add a `지킬 조건` line. |
+
+## Labels and terms
+
+Write these labels exactly; people read them and the script looks for them. Dates are `YYYY-MM-DD`.
+
+| Concept | Label |
+|---|---|
+| prerequisite | `선행: <ID> <title>` |
+| superseded | `대체됨(<date>): <reason>` |
+| derived | `따라 정함(<date>): <decision> 결정에서` |
+| user decision | `사용자 결정(<date>):`, or with how it was decided, `사용자 결정(<date>, 추천안대로):` |
+| model interpretation | `모델의 해석(사용자 확인 전):` |
+| confirmed interpretation | `사용자 확인(<date>):` |
+| recommendation | `추천(<date>):` |
+| adopt / reject | `채택` / `거절` |
+| moved | `옮김(<date>): <old parent> → <new parent>` |
+| withdrawn with parent | `부모 철회에 따름(<date>)` |
+| rule exception | `규칙 예외: <rule>, <why>` |
+| unverified | `확인 전` |
+
+- Write statuses in English as they are.
+- A group of decisions is an axis (`축`). A perspective (`관점`) is only the view used to find axes at the start.
+- Prune (`가지치기`) means only removing nonsensical candidates before anything is recorded.
+- `withdrawn` means only a decision whose premise disappeared.
+- Name rules by their titles, not by numbers.
+
+## Tree document
+
+Keep the tree where the user says; otherwise in the environment's designated output directory, or at `outputs/<topic>-decision-tree.md` in the project.
 
 ```markdown
-- A [settled] Source data
-  Use the weather alerts and disaster messages already collected.
-  Additional source datasets are outside the current scope.
+# <주제> 결정 트리
 
-  - A.1 [open] Evidence for fixed safety information
-    Decide whether explicit statements are sufficient, or whether recurring
-    notices can also support an inference about persistent risk.
+## 주제
+...
 
-    These approaches rely on different kinds of evidence.
+## 현재 상태
+- 작업 위치: B
+- 최근 제시한 질문: B.2
+- 지킬 조건: 출시 목표일을 정하지 않는다(출시 목표일 결정 B.1)
+- 진행 약속: 이 인터뷰에서는 설명을 표 대신 목록으로 한다
+- 불러온 영역 스킬: code-principles
+
+## 확인한 사실
+- F1. ...(날짜, 출처)
+
+## 결정 트리
+- A [settled] ...
+  ...
+
+## 세션 기록
+- 2026-10-30: ...
 ```
 
-Only entries with node IDs represent decision nodes.
-Prose and explanatory lists belong to their owning node and do not introduce
-another decision depth.
+- A node is a nested list item `- <ID> [<status>] <short title>`, and nesting sets its depth. Lines without an ID belong to the node above and add no depth.
+- A node is one decision that can be answered, settled, or reconsidered on its own; its title and text together make clear what it decides. Put a new node under the decision it refines, not under the one answered last. Related subject matter alone makes neither a parent nor a prerequisite.
+- Write the text under a node naturally, at the length needed to keep its open question, its decision, and the context. Field names are optional, except `선행:`, which is written only when the prerequisite is a decision in the tree; the parent is shown by position and is never written as a prerequisite.
+- Top-level axes take letters (`A`, `B`), deeper levels take numbers (`B.1`, `B.1.2`). An ID is given when a candidate becomes a node and never changes: do not renumber, and keep the ID when moving a node.
+- An axis that only groups decisions still has a decision of its own, such as what the axis covers.
+- To point to a decision from outside the tree, write its meaning followed by the tree name and ID, such as "환불 계좌를 받지 않는 결정(예약 보증금 트리 C.2)", and link the tree name to the file inside documents. Do not use `file#ID` anchors; list items have none.
 
-Use these statuses:
-- `open`: the decision remains unresolved.
-- `blocked`: a necessary prerequisite remains unresolved.
-- `settled`: this node's decision has been made.
-- `withdrawn`: the decision is no longer relevant; retain a brief reason.
+## Examples
 
-Determine depth from the document's nesting.
-Preserve existing IDs when adding, withdrawing, or moving nodes.
-Do not renumber nodes to make the tree look tidy.
+These show the shape of a reply and of nodes, not their content.
 
-Keep a brief session record of the working position and the most recently
-presented question nodes. Preserve other unresolved decisions in the tree.
+<example>
+이렇게 적었습니다: 허용 형식은 JPEG, PNG, HEIC로 정했습니다(사용자 결정). HEIC를 받기로 해서 서버에서 JPEG로 바꿔 저장하는 결정도 따라 정했습니다.
 
-## Choosing questions
+[현재노드-B.5-사진 한 장의 용량 상한]
 
-Choose the working position and question order according to the decisions
-that need to be made and their prerequisites.
+```text
+사진 업로드                          settled
+├─ 정한 결정 4개
+├─ ▶ 사진 한 장의 용량 상한          open    ← 지금 질문
+└─ 업로드가 끊겼을 때 이어 올리기    open
+```
 
-Honor an explicit user request for a node, segment, or order.
-When the user selects an unresolved node, address that decision itself.
-Do not bypass it merely to ask about its descendants.
+사진 한 장을 올릴 때 용량 상한을 얼마로 둘까요?
 
-At the beginning, choose the necessary starting decision and ask it directly.
-Do not require a separate choice of starting route.
+추천: 20MB로 두고, 그보다 큰 사진은 앱에서 긴 변 4,096px로 줄여 올립니다.
 
-For subsequent turns, select up to two substantive questions:
-- At most one necessary decision one level deeper.
-- At most one necessary unresolved decision at the same depth.
+이유:
+- 요즘 휴대폰의 고화질 사진은 10MB를 자주 넘어서, 10MB 상한이면 원본을 그대로 올리지 못하는 일이 잦습니다.
+- 앱에서 먼저 줄이면 실패 화면 없이 올라가고, 서버는 크기만 검사하면 됩니다.
 
-Use the same reference position when selecting both candidates.
-The same-depth candidate may belong to another relevant branch.
+잃는 것: 10MB 상한보다 저장 비용이 늘고, 긴 변이 4,096px보다 큰 원본은 남지 않습니다.
 
-Keep unresolved peer decisions in view when choosing where to continue.
-A newly available child is not automatically more important than those peers.
+규칙과의 관계: 구체화. 코드 원칙의 "신뢰할 수 없는 경계에서 검증한다"를 서버의 크기 검사로 적용합니다.
+</example>
 
-Ask only questions that can meaningfully be answered now.
-Investigate facts available from the environment or materials yourself.
+<example>
+```markdown
+- C [settled] 환불
+  사용자 결정(2026-11-04): 보증금을 돌려주는 방식과 조건을 이 축에서 다룬다.
 
-If one question's answer could change the other question's necessity, meaning,
-or scope, ask the prerequisite question first and defer the dependent question.
+  - C.1 [settled] 환불 방식
+    사용자 결정(2026-11-05, 바뀐 추천안대로): 원래 결제 수단으로 돌려준다.
+    대체됨(2026-11-05): 포인트를 쓰지 않는 손님의 항의가 이어졌다.
+    사용자 결정(2026-11-04, 추천안대로): 매장 포인트로 돌려준다.
 
-Omit a direction when it has no useful, eligible question.
-Do not invent decisions or add filler questions to reach two.
+  - C.2 [settled] 환불 계좌 입력 화면
+    따라 정함(2026-11-05): 환불 방식 결정에서. 원래 결제 수단으로 돌려주므로 계좌를 받지 않고, 화면을 만들지 않는다.
 
-Choose and present the actual decision questions.
-Do not insert a separate turn asking whether to move deeper, sideways,
-or to another node.
+  - C.3 [blocked] 당일 취소의 환불 비율
+    선행: B.2 노쇼 판정 시각
+    추천(2026-11-05): 예약 3시간 전까지 취소하면 전액, 그 뒤에는 절반을 돌려준다.
+```
+</example>
 
-## Presenting questions
+## Scripts
 
-Each question concerns one node and one decision.
+`scripts/decision_tree.py` in this skill's directory reads a tree, including its split files, and never changes it. Run `python3 <this skill's directory>/scripts/decision_tree.py <command> <tree file>`, and add `--json` for structured output.
 
-Identify its node using this exact marker structure:
+- Before presenting a question, run `next`; `--from <ID>` starts from a decision you name.
+- After editing the tree, run `check`. Errors, with exit code 1, are structural: duplicate IDs, unknown statuses, a `선행:` line without an ID or pointing to a missing decision, prerequisite cycles, statuses that disagree with `선행:`, and broken split-file front matter. Warnings flag label formats; older trees may carry older label styles, so fix warnings only on lines you wrote or touched.
+- When a decision changes, and before deleting a node, run `impact <tree file> <ID>`.
+- When an axis closes, run `map` for the counts; it also lists waiting questions and unconfirmed interpretations.
 
-[현재노드-<ID>-<short human-readable node title>]
+## Finishing
 
-Keep the node marker separate from the actual question.
-Immediately below the marker, state the decision as a clear, self-contained
-question. Then provide your recommended answer with a brief, contextual reason
-and any useful explanation. Use the user's language.
-
-Do not use the node title as a substitute for the question or replace the
-question with a generic request to approve your recommendation.
-
-The recommendation must address the decision itself, not recommend a navigation
-destination.
-
-Present at most two such question blocks, then wait for the user's response.
-Do not hide additional independent decisions inside either block.
-
-Show only the tree context needed to understand the questions.
-Do not repeat the full tree or a navigation menu after every answer.
-
-## Interpreting answers and updating nodes
-
-First determine which decisions the user's response actually answers or changes.
-Distinguish explicit decisions, verified facts, and your own interpretation.
-
-If the user answers only one of the presented questions, leave the other
-unresolved. Do not treat silence, a recommendation, or navigation as agreement.
-
-Update other nodes when the answer actually affects them:
-- Record another decision when the user explicitly makes or changes it.
-- Update an affected premise, dependency, or status when necessary.
-- Reopen a decision whose accepted answer no longer holds.
-- Leave a newly required choice unresolved until it is answered.
-
-Before changing another node, identify which premise, decision, or status
-is affected. If none is affected, leave the node unchanged.
-
-Shared terminology or related subject matter alone does not justify an edit.
-Do not rewrite titles, explanations, or neighboring decisions merely to make
-their wording match the latest response.
-
-Reflect necessary changes across the tree without treating one answer as
-permission to settle other decisions.
-
-## Editing the document
-
-Create the document once and maintain it through targeted edits.
-
-Before editing, read the relevant nodes and enough surrounding context to
-understand their boundaries and dependencies.
-
-Change only the affected text and statuses, or insert new nodes where they
-belong. Preserve valid existing content, descendants, and IDs.
-
-Do not regenerate the document or an entire subtree to update one decision.
-Do not reconstruct the file from conversational memory.
-
-Save and inspect the affected region before proceeding.
-If an edit fails, reread the current content and correct it.
-
-After recording the answer, reconsider the next necessary questions using
-the updated tree.
-
-## Resuming, reconsidering, and finishing
-
-When resuming, read the existing document and recover the decisions,
-unresolved questions, and working position.
-
-If the user specifies a node or segment, continue there.
-If the user simply says "continue," choose the next necessary questions yourself.
-Do not require another navigation choice.
-
-Expanding a settled node preserves its accepted decision while examining
-necessary details beneath it.
-
-Reconsidering a decision is a separate action.
-When its answer changes, retain enough context to explain the change and update
-only the descendants or dependent nodes actually affected.
-
-When the user stops, preserve the tree and stop asking questions.
-
-If no eligible question remains, distinguish unresolved blockers from a
-completed review. Do not manufacture further questions to keep the session going.
-
-For a partial summary, distinguish settled decisions from open or blocked ones.
-For final completion, follow `grilling`'s confirmation and final-consolidation
-rules. Preserve the tree for later resumption or expansion.
+- When the user stops, keep the tree and stop asking.
+- When no answerable question remains, say whether blockers remain or the review is complete; do not invent questions to keep going.
+- A partial summary separates settled decisions from open and blocked ones.
+- Before the final stage, find live `모델의 해석(사용자 확인 전):` lines (search, or `map`) and ask each as a decision question, one per turn. Change a confirmed one to `사용자 확인(<date>):`; fix a wrong one and propagate it like a changed decision. An unconfirmed interpretation never enters the design document as a decision.
+- Begin the final stage as the base skill directs, only after every material question is resolved and the user explicitly confirms shared understanding. Leave the tree where it is for later reopening; the design document is what lasts. Do not propose a separate decision-record format beside the tree.
