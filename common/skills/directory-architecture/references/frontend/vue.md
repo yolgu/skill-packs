@@ -117,11 +117,8 @@ Expose route records, pages required by composition, application operations, and
 
 ## Testing
 
-- test domain and application logic without Vue where possible
-- test composables at their ownership scope
-- test pages for route conversion, state, rendering, and user actions
-- test router composition and guards
-- test Infrastructure mappings separately
+- put each test beside the file it verifies (`Foo.test.ts` next to `Foo.vue`); the test order and the outer-loop test definition belong to the client UI skill (client-ui-best-practices), not to this structure document
+- place a feature's integration tests at the root of that feature's folder
 - retain end-to-end tests at app scope
 
 After moves, verify auto-imports, aliases, route generation, lazy chunks, TypeScript, unit tests, and production build.

@@ -120,12 +120,13 @@ Where possible, verify data ownership with integration tests or schema permissio
 
 ## Test Placement
 
-- Domain rule tests stay with or near Domain.
-- Application use-case tests verify orchestration through explicit inputs and outputs.
-- Infrastructure integration tests verify adapters and mappings.
-- Page, screen, widget, or component tests stay near Presentation.
-- Module-boundary tests live at the narrowest scope that can observe the graph.
-- End-to-end tests remain at the application or system scope.
+- Put each test where the ecosystem's standard places the test of its source file, either in a test root that mirrors the source tree or beside the file; the framework references give the paths. Domain rule tests and page, screen, widget, or component tests follow this mirror like any other element test. The mirror applies to file location only: it does not require one test per source class, and which elements have tests is a test-design decision, not a placement one.
+- Place a test that crosses several elements at the root of the narrowest scope it observes:
+  - an adapter's integration test observes one element and keeps its mirrored location;
+  - a feature's end-to-end tests and other tests that cross several of its elements sit at the root of that feature's directory or package;
+  - journeys across features and architecture tests sit at the application root;
+  - module-boundary tests live at the narrowest scope that can observe the graph.
+- Keep shared test support (the end-to-end base, container setup, test data builders, network double handlers) in one test-only support directory under the application root.
 
 Colocation communicates ownership, but tests should assert observable behavior rather than file placement alone.
 

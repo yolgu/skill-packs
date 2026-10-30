@@ -151,11 +151,9 @@ Treat ios and android as platform adapter and build-system roots.
 
 ## Testing
 
-- domain and application tests avoid React Native
-- screen tests verify rendering, route input, interaction, and expected states
-- adapter tests verify storage, network, notification, and native mapping
-- navigation tests verify composition and access behavior
-- device or end-to-end tests cover platform integration
+- put each test beside the file it verifies (`Foo.test.tsx` next to `Foo.tsx`); the test order and the outer-loop test definition belong to the client UI skill (client-ui-best-practices), not to this structure document
+- place a feature's integration tests at the root of that feature's folder
+- device or end-to-end tests cover platform integration at app scope
 
 After moves, verify Metro resolution, TypeScript, route generation, deep links, tests, and affected native builds.
 

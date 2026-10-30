@@ -28,6 +28,7 @@ com.example.shop
 │   ├── OrderingFacade
 │   ├── PlaceOrder
 │   ├── application
+│   │   └── PlaceOrderUseCase   # input contract the inbound adapters call; its implementation sits beside it
 │   ├── domain
 │   ├── infrastructure
 │   └── presentation
@@ -50,6 +51,7 @@ Use controller, service, repository, and external when those are the project's r
 ├── controller/
 │   └── model/             # HTTP contracts
 ├── service/
+│   ├── UpdateForecastUseCase.java    # use case input contract; its implementation sits beside it
 │   └── model/             # application inputs and results
 ├── repository/
 │   ├── ForecastRepository.java       # public persistence contract
@@ -187,6 +189,10 @@ When ArchUnit is already present or a focused architecture test is warranted, en
 - the intended module graph is acyclic
 
 Test a representative prohibited edge so the rule is known to catch violations.
+
+## Test Placement
+
+Apply the Test Placement rules in verification.md. In Spring, a test mirrors its source under `src/test/java` in the same package, which also lets it use package-private members. A feature's end-to-end tests and other tests that cross several of its elements sit at the root of that feature's package, while an adapter's integration test keeps its mirrored place. Journey tests across features and ArchUnit tests sit in the application root package, and shared test support (the end-to-end base class, container setup, test data builders) lives in one support package under the application root.
 
 ## Verification
 

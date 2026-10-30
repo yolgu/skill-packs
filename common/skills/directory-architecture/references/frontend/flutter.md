@@ -151,11 +151,11 @@ Do not catch and silently flatten errors in every repository or ViewModel.
 
 ## Testing
 
-- unit-test Domain rules and Application use cases
-- unit-test ViewModels through explicit dependencies
-- widget-test pages and reusable Presentation components
-- integration-test repositories, services, plugins, routing, and end-to-end flows
+- mirror `lib/` under `test/`: the test of `lib/<path>/<name>.dart` is `test/<path>/<name>_test.dart`; the test order and the outer-loop test definition belong to the client UI skill (client-ui-best-practices), not to this structure document
+- place a feature's integration tests at the root of that feature's folder inside `test/`
+- keep app-level integration tests, which drive the whole app, in `integration_test/`
 - keep golden tests with the Presentation owner
+- keep end-to-end flows at app scope
 
 After moves, run formatting, analyzer, affected tests, code generation checks, and platform builds in proportion to the change.
 

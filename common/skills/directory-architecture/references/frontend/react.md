@@ -146,10 +146,8 @@ Block deep imports into domain internals with existing package exports, ESLint r
 
 ## Testing
 
-- test domain rules outside React
-- test application commands and queries through explicit ports
-- test pages for rendering, route input, user actions, and expected states
-- test Infrastructure mappings at the adapter boundary
+- put each test beside the file it verifies (`Foo.test.tsx` next to `Foo.tsx`); the test order and the outer-loop test definition belong to the client UI skill (client-ui-best-practices), not to this structure document
+- place a feature's integration tests at the root of that feature's folder
 - keep end-to-end tests at app scope
 - verify route composition, lazy loading, server/client boundaries, and provider placement after moves
 
