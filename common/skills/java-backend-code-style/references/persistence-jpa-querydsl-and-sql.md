@@ -1,4 +1,4 @@
-# JPA, QueryDSL, and SQL Rules
+# JPA, QueryDSL, SQL, and MyBatis Rules
 
 ## Table of contents
 
@@ -7,6 +7,7 @@
 - [Repositories and query tools](#repositories-and-query-tools)
 - [QueryDSL](#querydsl)
 - [SQL](#sql)
+- [MyBatis mappers](#mybatis-mappers)
 
 ## Domain and JPA models
 
@@ -64,6 +65,8 @@ Do not use the following on a JPA Entity:
 Do not turn every foreign key into an object relationship. Declare a relationship only when actual traversal is needed within the same Aggregate and lifecycle boundaries align. Use explicit `FetchType.LAZY` by default for relationships, including `ManyToOne` and `OneToOne`.
 
 Do not hide N+1 behavior with EAGER loading. Resolve it according to the Use Case with an appropriate fetch join, EntityGraph, QueryDSL projection, Query Repository, or batch fetch, and inspect the generated SQL. Reference another business owner's Aggregate by identifier by default.
+
+Disable Open Session in View (`spring.jpa.open-in-view=false`) in the base work item, so a lazy access outside the Use Case transaction fails fast instead of silently stretching the persistence context across the web layer; load what the Use Case needs inside its own boundary.
 
 ### Use cascading only for owned lifecycles
 
@@ -228,3 +231,65 @@ Verify database-specific syntax and complex queries against the actual supported
 - Execution plans and performance criteria at a representative scale
 
 Do not treat passing H2 tests as proof of production-database behavior specific to CUBRID, PostgreSQL, Oracle, or another database.
+
+## MyBatis mappers
+
+### Treat the mapper interface as the public persistence contract
+
+**MUST**
+
+A MyBatis mapper is a persistence adapter: the mapper interface is the public repository contract and the XML mapping is its implementation. Do not add a separate contract interface or an implementation class with the same role on top of it. The JPA form of this rule is "Keep the public repository contract independent of JPA"; do not restate it for mappers.
+
+### Keep MyBatis execution types out of mapper signatures
+
+**MUST NOT**
+
+Do not expose `RowBounds`, `ResultHandler`, `Cursor`, or another MyBatis execution type in a mapper signature. Inputs and results are business objects, result records, or standard Java values.
+
+### Map rows into business objects in one place
+
+**MUST**
+
+Map query results directly into business objects or result records with constructor mapping in a `resultMap`. Do not publish a `Map` result as the public contract. Keep the conversion between the row structure and the business object in that one `resultMap`, and do not repeat it in Java.
+
+### Bind values and allow-list identifiers
+
+**MUST**
+
+Bind values with `#{}` only. Use `${}` only for an identifier that comes from a closed enum or an allow list, such as a sort key or a table suffix, never for external input. A search for `${` in mapper XML is a machine-check hint, not a substitute for review.
+
+### Keep business rules out of mapper XML
+
+**MUST NOT**
+
+Dynamic SQL in the XML assembles conditions; it does not decide business rules. The service or domain decides and passes the decision as a value. Do not encode state transitions, authorization, or calculation rules in `<if>` or `<choose>` branches.
+
+### Let the application service own the mapper's transaction
+
+**MUST**
+
+The application service owns the transaction boundary and the mapper call participates in it, as "Keep business transactions at the application layer" in [Spring boundaries and adapters](spring-boundaries-and-adapters.md) requires. A mapper method does not open its own transaction.
+
+### Record mixed JPA and MyBatis use at design time
+
+**SHOULD**
+
+When one Use Case uses both JPA and a MyBatis mapper in the same transaction, a JPA change that has not been flushed is invisible to the mapper's read. Record such a Use Case in the plan item's design field together with the ordering or flush decision it relies on.
+
+### Verify database-specific translation instead of encoding it
+
+**SHOULD**
+
+Do not encode database-specific exception translation as a rule here. Verify it on the supported database as "Verify database-specific queries on the supported database" requires; a database missing from Spring's SQL error code table is confirmed in the base work item.
+
+### Integration-test every mapper method a service test doubles
+
+**MUST**
+
+Integration-test a MyBatis mapper against the real database as the contract test of every mapper method that a service test replaces with a double: assert that method's meaning there (the value returned when nothing matches, ordering, affected-row counts). Queries with their own logic and the interpretation of the last line of defense (constraint violation translation, zero affected rows on a conditional update) are tested in the same integration tests. The test forms are in [Testing and verification](testing-and-verification.md).
+
+### Follow the SQL rules for mapper SQL
+
+**MUST**
+
+SQL inside a MyBatis mapper XML follows the [SQL](#sql) section; do not repeat those rules here.

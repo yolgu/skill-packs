@@ -83,14 +83,12 @@ When existing field binding depends on private mutable fields and a restricted n
 
 **MUST**
 
-- of(values...): create an object from prepared values.
-- from(source): translate a different representation into this type.
+Use the construction and conversion names in code-principles, Name Construction and Conversion by Meaning (`of`, `from`, `create`, `issue`, `register`, `restore`). In Java:
+
 - toDto(): translate this object to one contextually unambiguous DTO.
 - toXxx(): name the target explicitly when more than one conversion is possible.
-- create, issue, register: express new business-object creation when it has that meaning.
-- restore: reconstruct business state when that operation differs from new creation.
 
-Choose of and from by meaning, not argument count. A one-value of is valid. A static factory's source parameter still creates a type dependency.
+A one-value of is valid. A static factory's source parameter still creates a type dependency.
 
 ### Keep mappings explicit and free of business decisions
 

@@ -28,6 +28,8 @@ Do not disguise a technical failure as the wrong business failure.
 
 Use an explicit Runtime Exception by default for a business failure. Use a checked exception only when the caller must make a real recovery choice.
 
+Returning an expected business outcome as a sealed result type instead of throwing is permitted only when that judgment completes before the first write of the Use Case. A rejection discovered after a write is thrown as a Runtime Exception so that declarative rollback applies; do not return normally and rely on `setRollbackOnly`. When a Presentation Handler translates a result type into an HTTP error, it uses the same error response format established in the base work item.
+
 ### Keep external contracts out of domain exceptions
 
 **MUST NOT**
@@ -40,8 +42,6 @@ Do not place an HTTP status, JSON structure, Spring `@ResponseStatus`, database 
 
 Reveal the business meaning of a failure with names such as `CouponExpiredException`, `MemberNotFoundException`, `MemberExportNotAllowedException`, and `NotificationDeliveryException`. Do not use `BusinessException`, `ServiceException`, `CommonException`, `CustomException`, or `ProcessFailedException`.
 
-A business area may own specialized Exceptions and an exception hierarchy. Introduce a shallow base type only when a real error code, property, or handling behavior is shared; do not create deep inheritance for message differences alone.
-
 ### Handle failures meaningfully and preserve their causes
 
 **MUST**
@@ -52,7 +52,7 @@ Do not catch an exception, log it, and then return as though the operation succe
 
 **MUST**
 
-Restrict `catch (Exception)` and `catch (Throwable)` to process boundaries such as per-item Batch isolation, the outer edge of a Scheduler, Message acknowledgement or rejection, or a global HTTP safety net. Do not erase every inner-layer failure as one generic exception.
+Restrict `catch (Exception)` and `catch (Throwable)` to process boundaries such as per-item Batch isolation, the outer edge of a Scheduler, Message acknowledgement or rejection, or a global HTTP safety net.
 
 ### Expose stable error codes rather than internal messages
 
@@ -103,7 +103,9 @@ Do not record every normal input error or ordinary missing target as WARN, and d
 
 **MUST NOT**
 
-Do not have Repository, Service, and Handler each record the same exception as ERROR and rethrow it. Log at one meaningful point: the layer that actually recovers, an adapter that adds useful technical context, or the boundary that finally consumes the failure. A layer that merely rethrows must not log.
+Do not have Repository, Service, and Handler each record the same exception as ERROR and rethrow it.
+
+The failure classification decides the expected count. A business failure path (rejection, missing target, conflict) leaves no log at WARN or above. A technical failure path leaves exactly one log at WARN or above at the boundary that consumes it, with the required fields (request identifier, error code) and no secret values. A failure the framework already logs once (an after-commit listener exception, a consumer's or Batch job's default error handling) counts as that one; the application does not add another.
 
 ### Preserve stack traces when logging exceptions
 
@@ -230,7 +232,7 @@ Concentrate environment-specific implementation selection and profile branching 
 
 **MUST NOT**
 
-Do not provide defaults for values whose absence is dangerous, such as an API key, production endpoint, administrator account, secret, or production bucket. Do not use automatic `toString()` on a configuration object containing secrets or log the entire object. Do not introduce a particular secret manager without an authorized request.
+See code-principles, Keep Configuration and Logs Safe to Operate, for the dangerous-default rule. In Java, do not use automatic `toString()` on a configuration object containing secrets or log the entire object. Do not introduce a particular secret manager without an authorized request.
 
 ### Separate environment settings from business rules
 

@@ -2,9 +2,9 @@
 
 ## Scope
 
-The complete example below updates one stored forecast value. Each Java block is one source file, with package declarations showing source dependencies. The service owns the transaction; the public repository owns its input and result; the JPA implementation owns Entity access and conversion.
+The complete example below updates one stored forecast value. Each Java block is one source file, with package declarations showing source dependencies. The Controller calls the use case through its input contract, which the service implements; the service owns the transaction; the public repository owns its input and result; the JPA implementation owns Entity access and conversion.
 
-Use these roles when the task needs them. This CRUD example has no business rule requiring a separate domain twin, UseCase interface, Mapper, or extra Adapter.
+Use these roles when the task needs them. This CRUD example has no business rule requiring a separate domain twin, Mapper, or extra Adapter. It still has a UseCase interface, because that input contract is what the Controller depends on.
 
 ## HTTP input and service input
 
@@ -207,6 +207,22 @@ Entity access and value mapping stay here. ForecastResultDto does not declare fr
 
 ## Application flow and result
 
+### UpdateForecastUseCase.java
+
+~~~java
+package example.weather.service;
+
+import example.weather.service.model.UpdateForecastRequestDto;
+import example.weather.service.model.UpdateForecastResultDto;
+
+public interface UpdateForecastUseCase {
+
+    UpdateForecastResultDto update(UpdateForecastRequestDto request);
+}
+~~~
+
+The Controller depends on this narrow input contract, and ForecastService implements it. It names one use case rather than copying the service's whole method set.
+
 ### ForecastService.java
 
 ~~~java
@@ -223,10 +239,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ForecastService {
+public class ForecastService implements UpdateForecastUseCase {
 
     private final ForecastRepository forecasts;
 
+    @Override
     @Transactional
     public UpdateForecastResultDto update(final UpdateForecastRequestDto request) {
         final SaveForecastRequestDto storageRequest = SaveForecastRequestDto.of(
@@ -298,7 +315,7 @@ package example.weather.controller;
 
 import example.weather.controller.model.ForecastResponse;
 import example.weather.controller.model.UpdateForecastRequest;
-import example.weather.service.ForecastService;
+import example.weather.service.UpdateForecastUseCase;
 import example.weather.service.model.UpdateForecastResultDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -311,14 +328,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ForecastController {
 
-    private final ForecastService forecasts;
+    private final UpdateForecastUseCase updateForecast;
 
     @PatchMapping("/forecasts/{forecastId}")
     public ForecastResponse update(
         @PathVariable("forecastId") final Long forecastId,
         @Valid @RequestBody final UpdateForecastRequest request
     ) {
-        final UpdateForecastResultDto result = forecasts.update(request.toDto(forecastId));
+        final UpdateForecastResultDto result = updateForecast.update(request.toDto(forecastId));
         return ForecastResponse.from(result);
     }
 }

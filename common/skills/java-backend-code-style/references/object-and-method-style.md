@@ -39,7 +39,7 @@ Write Java class, method, variable, package, and enum identifiers in English usi
 | Role | Names |
 |---|---|
 | HTTP components | ...Controller, ...ApiExceptionHandler, ...ArgumentResolver |
-| Application execution | ...Service; ...UseCase when an independent interface is needed |
+| Application execution | ...UseCase for the input contract an inbound adapter calls; ...Service for its implementation |
 | Business model | Business noun, ...Id, ...Status, ...Policy, ...Decision, ...Event, ...Calculator |
 | Persistence contract | ...Repository, ...QueryRepository |
 | Persistence implementation | Jpa...Repository, ...SpringDataRepository, ...JpaEntity, ...QueryRow |

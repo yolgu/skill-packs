@@ -105,7 +105,7 @@ Apply the relevant `MUST` and `MUST NOT` rules to new code. Safely improve obvio
 
 Do not interpret a review request as authorization to modify files. Include the following in a review finding:
 
-- Rule ID and strength
+- Rule title and strength
 - Exact location
 - Actual behavioral, security, or maintenance impact
 - Recommended correction

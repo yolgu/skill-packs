@@ -74,6 +74,7 @@ final List<MemberSummary> summaries = members.stream()
 Use standard types that match the meaning and required precision.
 
 - Use `LocalDate` for a calendar date, `Instant` for a global point in time, `OffsetDateTime` when an offset belongs to the contract, `ZonedDateTime` when regional time-zone rules matter, `Duration` for elapsed time, and `Period` for a calendar period.
+- Store and compute instants in UTC and convert to the user's zone only at the presentation boundary. Make the JVM, JDBC driver, and database session time zone explicit in the base work item instead of relying on the host default.
 - Isolate conversions to legacy `Date`, `Calendar`, and `Timestamp` types in infrastructure adapters.
 - Do not use `float` or `double` for money or exact decimal calculations.
 - Construct `BigDecimal` from a string or integer representation, and state scale and rounding for division. Compare numeric values with `compareTo()` or a meaningful Value Object method.

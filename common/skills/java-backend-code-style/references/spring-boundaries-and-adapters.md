@@ -1,4 +1,4 @@
-# Spring Boundary, Use Case, Adapter, Scheduler, and Batch Rules
+# Spring Boundary, Use Case, Adapter, Scheduler, Batch, Consumer, and Listener Rules
 
 ## Table of contents
 
@@ -7,16 +7,18 @@
 - [External Ports and Adapters](#external-ports-and-adapters)
 - [Scheduler](#scheduler)
 - [Batch](#batch)
+- [Message consumers](#message-consumers)
+- [After-commit event listeners](#after-commit-event-listeners)
 
 ## Use Cases and dependencies
 
-### Expose a Use Case interface when its contract needs separation
+### Give each Use Case a narrow input contract
 
-**SHOULD**
+**MUST**
 
-A Spring @Service can be the application entry point directly. A Controller, Scheduler, or Batch caller does not by itself require a Service/Impl pair or a ...UseCase interface.
+Every Use Case that an inbound adapter (a Controller, Scheduler, Batch step, message listener, or event listener) calls gets a narrow input contract interface named after the Use Case, such as `PlaceOrderUseCase`, implemented by the application service (`PlaceOrderService`). The adapter depends on that contract, and the adapter's tests replace it with a double. One implementation is sufficient: the contract is the role the adapter depends on, not a test convenience.
 
-Use an interface when the application contract needs independent publication, implementation isolation, or actual polymorphism. One implementation is sufficient when that boundary is real. Keep the interface in application vocabulary and avoid collecting unrelated operations into one enormous Use Case.
+Keep the contract in application vocabulary with the Use Case's own input and result models, and do not collect unrelated operations into one enormous Use Case. An interface that copies a service class's whole method set is not this contract; Keep Spring components direct still rules out ...ServiceImpl pairs.
 
 ### Implement the application flow through public contracts
 
@@ -52,6 +54,12 @@ HTTP context conversion is defined in [HTTP boundary rules](http-dto-and-json-st
 
 Make the public entry method of an Application Use Case own the business transaction. Ensure lookup, Domain behavior, and persistence succeed or fail atomically within one business unit. A Repository performs data access but does not own overall business atomicity or hidden partial commits.
 
+Stated exceptions, each recorded in the plan item's design field rather than inferred:
+
+- A Spring Batch chunk Step owns the transaction of its chunk.
+- A listener that combines a Kafka transaction with the database transaction owns that combined boundary.
+- When a Use Case includes a slow external call, the entry method coordinates the steps without a transaction, and only the database-changing step opens one, through a declaration on a separate component named for that responsibility or through `TransactionTemplate`.
+
 ### Use read-only transactions only for read-only work
 
 **MUST**
@@ -70,7 +78,7 @@ Do not put a business transaction on a Controller, Request, Response, Domain obj
 
 **SHOULD NOT**
 
-Do not hold a database connection and lock for a long-running external network call. Separate short database changes, the external call, and result application according to business atomicity. For a concern such as payment that requires external and internal consistency, do not merely move the call outside the transaction; design the state model, idempotency, retries, and compensation explicitly. Do not choose Outbox or Saga automatically.
+Do not hold a database connection and lock for a long-running external network call. Narrow the atomic unit to the database-changing step and place the external call before it or after it has committed, using the stated exception under "Let the application use case own the transaction": the entry method coordinates without a transaction and the database step opens its own. A write that depends on a value read outside that narrowed boundary uses a conditional update or a version check instead of trusting the earlier read. For a concern such as payment that requires external and internal consistency, do not merely move the call outside the transaction; design the state model, idempotency, retries, compensation, and the unknown-outcome state explicitly. Do not choose Outbox or Saga automatically.
 
 ### Verify independent commits and partial failure behavior
 
@@ -120,21 +128,13 @@ Do not expose provider exceptions directly to inner layers. Translate authentica
 
 **MUST**
 
-Declare connection timeout, response timeout, and any required deadline explicitly. Own the values in configuration according to service and operational criteria. Do not rely on unlimited waits or ambiguous library defaults.
+See code-principles, Make External Calls Explicit.
 
 ### Retry only when failure and duplication semantics permit it
 
 **MUST**
 
-Before applying a retry, verify:
-
-- Whether the failure is transient
-- Whether the request is idempotent or carries an idempotency key
-- Whether duplicate effects are acceptable
-- Whether the caller and adapter would retry the same operation twice
-- Whether a database transaction or lock would remain open too long
-
-Do not normally retry authentication, format, authorization, or permanent failures. Do not add a retry or circuit-breaker library without a request that authorizes it.
+See code-principles, Make External Calls Explicit.
 
 ### Expose external failures and approved fallback states
 
@@ -179,6 +179,12 @@ When multiple instances, an unfinished prior execution, restart, external schedu
 
 Do not introduce a distributed lock automatically without a confirmed need.
 
+### Decide scheduler risks at design time
+
+**SHOULD**
+
+Record in the plan item's design field, before the first test: how concurrent runs across multiple instances are prevented or tolerated; that a lock only prevents concurrent runs while correctness on re-execution (whether an already processed target changes again) is the state model's responsibility; how failures are isolated per target so that one failing target does not abort the run; and which time zone the schedule and the reference time use. The outer-loop test calls the entry method directly with a fixed reference time instead of waiting for cron; its form is in [Testing and verification](testing-and-verification.md).
+
 ## Batch
 
 ### Separate Spring Batch responsibilities
@@ -216,3 +222,49 @@ Pass reference time, processing interval, requester, and execution identifier as
 Distinguish technical and business failures in Retry, Skip, and Restart behavior. Track skipped targets and reasons, success, failure, and skip counts, partial-failure meaning, restart position, and duplicate effects. Do not use unlimited Skip behavior to make a failed Job appear successful.
 
 Avoid making many slow provider API calls inside a Chunk transaction. Review rate limits, idempotency, duplicate delivery, retry unit, result-persistence timing, and database-transaction lifetime together.
+
+### Decide batch policies at job design time
+
+**MUST**
+
+Because reading comes first in a Job, decide the item type, chunk size, restart policy, and skip policy when designing the Job, and implement the Reader last, after the Processor and Writer exist against that item type. Record in the plan item's design field: run identification (the identifying Job Parameters), the restart position, duplicate effects when a failed chunk is reprocessed, the skip limit, and any external call inside a chunk. The chunk Step owns the transaction, as the stated exception under "Let the application use case own the transaction".
+
+## Message consumers
+
+### Keep consumers as thin adapters that invoke use cases
+
+**MUST**
+
+Keep a Kafka or RabbitMQ listener as a thin inbound adapter: deserialize and validate the message, build the execution context, invoke the Application Use Case, and apply the outermost failure policy. The Use Case service owns the business transaction; the listener method does not. A listener that combines a Kafka transaction with the database transaction is the stated exception and names that combined boundary explicitly.
+
+### Design consumers for at-least-once delivery
+
+**MUST**
+
+Assume redelivery. Derive an idempotency key from the message and keep the processing record in the same database transaction as the business change, so that a message redelivered after a crash between commit and acknowledgment is recognized. Acknowledge or commit the offset only after the database transaction has committed; never acknowledge first.
+
+### Classify consumer failures before retrying
+
+**MUST**
+
+Decide per exception whether the message is retried (transient infrastructure failures) or not (deserialization and validation failures, business rejections, and other poison messages), and route non-retryable and exhausted messages to a dead-letter topic or queue with the failure reason. With RabbitMQ an exception requeues the message by default, so a poison message loops; reject without requeue or configure retry with a dead-letter queue. The framework's error handler already logs each consumer failure once, and the application does not log it again (see [Errors, logging, and configuration](errors-logging-and-configuration.md)).
+
+## After-commit event listeners
+
+### Keep after-commit listeners as thin adapters
+
+**MUST**
+
+Keep an `@TransactionalEventListener` as a thin adapter that invokes an Application Use Case for the follow-up work. Publish the event from the Use Case and let the listener phase, not the publisher, decide that it runs after commit. The change the listener triggers must commit in its own new transaction; it must not join the finished transaction.
+
+### Decide where propagation lives after verifying it
+
+**MUST**
+
+In the after-commit phase the default propagation joins the already completed transaction, so a write made there does not commit. This behavior is confirmed from source reading only, so the base work item verifies it on the project's stack before the first listener is written: whether `NOT_SUPPORTED` on a synchronous listener method makes the Use Case it calls commit anew, whether the transaction reads as inactive inside it, and whether a write without any declaration gets committed on the JDBC path by auto-commit restoration. Record the result here, one line. Until then, prefer `NOT_SUPPORTED` on the listener method or asynchronous execution, and treat `REQUIRES_NEW` as a recorded exception under "Verify independent commits and partial failure behavior". Spring 6.1 rejects a listener method declared with other propagation values at startup but does not catch a missing declaration; check it in review.
+
+### Handle listener failures and resources explicitly
+
+**MUST**
+
+A listener exception is logged once at ERROR by the framework and is not propagated to the publisher, so record compensation or reprocessing in the plan item's design field and do not log the same failure again. A synchronous listener uses one additional connection during the after-commit phase; account for it in the pool size. An asynchronous listener needs an executor with a bounded queue and a decision about what happens when the queue is full. The test form (test transaction off, assertions by resulting state) is in [Testing and verification](testing-and-verification.md).
