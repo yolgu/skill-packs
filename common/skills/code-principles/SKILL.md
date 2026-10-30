@@ -79,6 +79,14 @@ Read [Universal Principles](references/universal-principles.md) in full for non-
 behavior changes, contract or boundary work, external calls, configuration or logging changes,
 stateful code, or structural refactoring.
 
+Read [Feature Implementation Flow](references/feature-implementation-flow.md) in full when
+implementing a feature through its layers or planning that implementation: it owns the order of that
+work, from the slice and the design decisions to record before the first test through the outer-loop
+test, top-down implementation, and failure-path proof to the pre-exposure gate.
+
+Read [Testing Theory](references/testing-theory.md) only while designing a behavior list: it explains
+what a passing test justifies and under which hypotheses, and it carries no rules.
+
 ## Make Python and TypeScript Types Explicit
 
 When authoring new or modifying existing human-authored Python or TypeScript:
@@ -124,7 +132,9 @@ function loadMember(memberId: number): Member {
   implement a fix.
 
 Read [Review and Verification](references/review-and-verification.md) in full for reviews, debugging,
-bug fixes, behavior-preserving refactors, test design, failed checks, or completion assessment.
+bug fixes, behavior-preserving refactors, test design, failed checks, or completion assessment: it
+owns the element test map, the test double and contract test rules, and the judgment of tests that
+break under refactoring.
 
 ## Finish on Evidence
 

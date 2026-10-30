@@ -4,6 +4,7 @@
 
 - [Respect the Requested Mode](#respect-the-requested-mode)
 - [Build Evidence Around Behavior](#build-evidence-around-behavior)
+- [Test Each Element by Its Role](#test-each-element-by-its-role)
 - [Characterize and Protect Existing Behavior](#characterize-and-protect-existing-behavior)
 - [Keep Tests Honest and Deterministic](#keep-tests-honest-and-deterministic)
 - [Use Project Verification as the Baseline](#use-project-verification-as-the-baseline)
@@ -67,6 +68,102 @@ Choose the narrowest evidence that exercises the real owner. Add integration evi
 depends on serialization, persistence, process boundaries, external protocols, concurrency, or tool
 configuration.
 
+## Test Each Element by Its Role
+
+**Principle.** Decide which tests exist from what each element is for, not from a list of layers, and
+pair every test double with a test that runs the real implementation it stands for.
+
+The test map, the double rules, and the refactoring judgment below are one rule set whose parts point
+at each other: the service row names its doubles, and the double rules require the outbound adapter
+row's contract test as their pair. The language and framework rules own the concrete forms (annotations,
+test libraries, slice setups), and the client UI rules own the frontend forms.
+
+### The Element Test Map
+
+| Element | Test | Doubles |
+| --- | --- | --- |
+| Promoted domain object | Framework-free unit tests of its public methods by their outputs; they own the boundary values | None |
+| Use case service | Unit tests that call its public methods; they own the business-rule branches | Its immediate-neighbour role interfaces: repository contracts, ports, and other use cases' input contracts. Helpers and deterministic shared calculation components stay real |
+| Inbound adapter (HTTP controller, scheduler entry method, message consumer, event listener) | The narrowest test of the adapter. For HTTP, a web slice test (the web layer alone) owns per-field input validation, status codes, and the error response format produced by the exception handlers, and checks the command sent to the use case | The use case's input contract |
+| Outbound adapter (persistence adapter, external API client, message publisher) | An integration test against the real target (a database, a broker) or a stand-in server. It is also the contract test for every method a service test doubles and confirms that method's meaning: the value returned when nothing matches, ordering, affected-row counts. Queries with logic of their own (conditions, paging, joins) and the interpretation of the last line of defense are tested here as well: a constraint violation is translated into the same failure meaning, with the same error code, that the pre-check path reports for that business failure, and zero affected rows from a conditional update is read as a conflict | None |
+| Main paths | Real-database end-to-end tests, as described below | Only unmanaged outside dependencies (external HTTP APIs, payment, outgoing messages, email and SMS) and time, through the shared end-to-end execution base; the system's own database is real |
+
+- An interface doubled in one row is run against its real implementation in another row, and that run
+  is its contract test: the outbound adapter's integration test for a repository contract or a port,
+  and the service's own tests for a use case's input contract.
+- Every use case that an inbound adapter calls therefore has a narrow input contract interface. Its
+  standing as a real contract is set by the interface rules in
+  [Feature Implementation Flow](feature-implementation-flow.md#top-down-implementation).
+
+### What Real-Database End-to-End Tests Prove
+
+- Write one normal-flow end-to-end test per use case first, in a failing state; it is the outer loop
+  of the slice.
+- Add a failure end-to-end test only for what element tests cannot prove:
+  - rollback and atomicity: a failure after a write leaves no half-saved state; the assertions on
+    execution outside the atomic unit and on after-commit follow-up belong here too;
+  - the failure log count across layers: a technical failure leaves exactly one entry at WARN or
+    above, a business failure leaves none, and an entry the framework already writes counts as that
+    one;
+  - authorization denial over the assembled path from authentication to ownership, as one
+    parameterized test.
+- Leave the rest to the element that owns it: per-field input validation, status codes, and the error
+  response format to the web slice test; business-rule branches to the service test; boundary values
+  to the domain test; an integrity constraint violation to the adapter integration test (its
+  translation) and the web slice test (its response); the last line of defense against concurrent
+  requests to the adapter integration test, asserted directly and without threads.
+- How each end-to-end assertion is proven (rollback read back from the database, log capture, the
+  resulting states of after-commit work, the denial rows) is in
+  [Feature Implementation Flow](feature-implementation-flow.md#failure-paths).
+
+### Helpers Inside One Service
+
+- A helper used only inside one service (a validator, a converter, a calculator) has no tests of its
+  own. The service tests run through the real helper, and the helper is never doubled.
+- When its cases grow too many to cover through the service tests, promote the rule to a domain object
+  or to an element with a public contract, and test that element by its row in the map.
+- A component that several use cases or modules share is not such a helper; the next rule covers it.
+
+### Shared Components
+
+- A component that several use cases or modules use (a shared validator, converter, or calculator, or
+  technical support code) is an element of the map. Test it directly through its public API:
+  - a business rule takes the domain object row, a unit test without doubles;
+  - technical shared code gets its own unit tests;
+  - a component that touches an outside system takes the outbound adapter row, an integration test
+    against the real target.
+- In the service tests that use it, keep a deterministic calculation component real; when it is a
+  role interface with side effects, double it under the rules below.
+- Whether a component counts as shared is judged by the shared-code criteria of the
+  directory-architecture skill (its architecture model, "Control Shared Code and Integration"): the
+  technical shared conditions for technical code, and the Shared Kernel conditions for a shared model
+  with business meaning.
+
+### Test Doubles and Contract Tests
+
+- Double a role interface the system owns when it is the immediate neighbour of the code under test:
+  a repository contract, a port, or another use case's input contract.
+- Stub queries and never verify them. Verify outgoing commands, by expecting the call or by asserting
+  what a recording fake captured; this covers commands sent to an owned neighbour (a repository
+  contract, another use case's input contract) as well as those sent outward through a port.
+- Do not mock values, third-party types, or concrete classes. When a concrete class seems to need a
+  mock, expose that relationship as an interface. Many mocks around one unit signal that it has too
+  many responsibilities.
+- Give every doubled interface a contract test that runs its real implementation; without that pair, a
+  double can drift from the real behavior unnoticed. A service test mocks a repository contract by
+  stubbing its queries and expecting its commands, and the persistence adapter's real-database
+  integration test confirms the meaning of every method so doubled.
+- Real-database end-to-end tests then prove only what doubles cannot, as listed above.
+
+### Tests That Break Under Refactoring
+
+- A pure refactoring changes no contract: neither an HTTP contract, nor a use case's input and result,
+  nor a role interface's signature and meaning. A test that breaks under it is over-specified (it
+  verifies a query, asserts call order, or asserts internal values); fix the test.
+- Changing a role interface is a contract change. Its double tests and its contract test changing
+  together is expected; when such changes are frequent, revisit the interface design.
+- Check this in review.
+
 ## Characterize and Protect Existing Behavior
 
 Use characterization evidence when existing behavior is observable but poorly documented or not
@@ -88,9 +185,9 @@ production code to make itself convenient.
 
 - Follow the project's test framework and naming style, and name a test for its condition and
   expected behavior.
-- Replace only real boundaries with test doubles: repositories, ports, external clients, clocks, and
-  identifier generators. Use real value objects, input and result models, and plain business
-  objects.
+- Choose test doubles by [Test Doubles and Contract Tests](#test-doubles-and-contract-tests): owned
+  role interfaces at the immediate neighbour, including the clock and identifier generator ports, are
+  doubled; value objects, input and result models, and plain business objects stay real.
 - Do not widen production visibility or add constructors, setters, or bypass methods only for test
   convenience. Put repeated valid-object construction in test fixtures or builders, and keep the
   boundary values that matter visible in the test rather than hidden in fixture defaults.
@@ -197,6 +294,8 @@ have passed, and no significant contrary evidence remains.
 - Are unrelated changes and defect fixes kept out of scope?
 - Does a refactor preserve observable behavior unless a difference was explicitly authorized?
 - Do tests and checks prove behavior and invariants rather than implementation trivia?
-- Are test doubles limited to real boundaries, and are tests deterministic and independent?
+- Do test doubles replace only owned role interfaces at the immediate neighbour, does every doubled
+  interface have a contract test against its real implementation, and are tests deterministic and
+  independent?
 - Were the project's required checks actually run and their results inspected?
 - Are unavailable checks and remaining risks reported accurately?
