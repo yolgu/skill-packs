@@ -84,6 +84,12 @@ You MUST complete each phase before proceeding to the next.
    THEN investigate that specific component
    ```
 
+   **Cleanup rule for diagnostic output (apply before completion):**
+   - Keep diagnostic output at component boundaries as DEBUG or TRACE on a per-class logger; switching it on and off is configuration's job (for example a Spring Boot `logging.level.<logger>` property, its environment-variable form, or the actuator loggers endpoint at runtime). Do not delete it.
+   - Delete one-off output: standard-output prints and whole-object dumps; output that duplicates what the framework already records at DEBUG (Hibernate SQL, MyBatis mapper SQL, Spring Web request logs); hot-path output whose message construction is expensive even when the level is off.
+   - Raising anything to INFO or above makes it a designed log point; do that deliberately and list it in the fix summary.
+   - Level choice, masking, body and secret exclusion, and parameterized messages follow the logging section of the language rules.
+
    **Example (multi-layer system):**
    ```bash
    # Layer 1: Workflow
@@ -270,7 +276,7 @@ If systematic investigation reveals issue is truly environmental, timing-depende
 1. You've completed the process
 2. Document what you investigated
 3. Implement appropriate handling (retry, timeout, error message)
-4. Add monitoring/logging for future investigation
+4. Decide and record the designed log points (INFO or above) here; everything else follows the diagnostic output cleanup rule in Phase 1
 
 **But:** 95% of "no root cause" cases are incomplete investigation.
 
@@ -279,5 +285,5 @@ If systematic investigation reveals issue is truly environmental, timing-depende
 These techniques are part of systematic debugging and available in this directory:
 
 - **`root-cause-tracing.md`** - Trace bugs backward through call stack to find original trigger
-- **`defense-in-depth.md`** - Add validation at multiple layers after finding root cause
+- **`defense-in-depth.md`** - After finding the root cause, validate once at the trust boundary, enforce each invariant once in its owner, and isolate on the test side
 - **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
