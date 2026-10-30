@@ -26,7 +26,7 @@ Then announce the skills you loaded and what each is for, and follow them. If on
 A process skill decides how to work; it does not carry the language, domain, or delegation rules. Stopping after the process skill is the most common miss, so route across all four axes before the first non-skill tool call:
 
 1. **Process**: debugging, receiving review, brainstorming, planning, implementing, verifying.
-2. **Artifact**: code touched or specified by a plan (Python, TypeScript, Java, Dart), tests, SQL, configuration.
+2. **Artifact**: code touched or specified by a plan (Python, TypeScript, Java, Dart), tests, SQL, configuration. For code work in any language, load code-principles together with the language or framework skill (java-backend-code-style for Java, client-ui-best-practices for React and Flutter); the language skills assume code-principles is loaded alongside them.
 3. **Domain**: MCP tool contracts on either side (server or consumer), module or directory boundaries, DB release, UI.
 4. **Delegation**: subagents suggested (including by plan mode) or considered.
 
