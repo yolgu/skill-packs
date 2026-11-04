@@ -63,4 +63,4 @@ outputs/
 - A graph shows one tree's decision structure: parents, children, and `선행:` relations. Links between trees, design documents, or projects are out of scope.
 - Split the tree down to one decision per file. The parent link lives in the `parent` field, and prerequisites are wikilinks on `선행:` lines, such as `선행: [[payment-flow-decision-tree.B.1]] 환불 승인 주체`.
 - Keep the tree where it is. To view it, open the tree's folder (the folder beside the trunk, or `outputs/`) in Obsidian as a vault of its own. Do not move it into another vault or link it in with a symbolic link: Obsidian does not watch changes made outside it behind a symbolic link, and the tree is edited from outside.
-- What must last goes into the design document; whether the tree goes into git is the project's call.
+- Whether the tree goes into git is the project's call.

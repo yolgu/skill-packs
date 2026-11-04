@@ -5,7 +5,7 @@ description: Use only when the user directly invokes grill-with-tree, or when co
 
 # Grill with Tree
 
-Run a decision interview from the first map to the final consolidation, and keep every decision in a persistent decision tree document. Read `../grilling/SKILL.md` and follow it; this skill sets the question order, the tree, and the stages around the interview.
+Run a decision interview from the first map until the user confirms shared understanding, and keep every decision in a persistent decision tree document. Read `../grilling/SKILL.md` and follow it; this skill sets the question order, the tree, and the stages around the interview.
 
 Conduct and record the interview. Do not carry out the plan being discussed.
 
@@ -14,7 +14,7 @@ Conduct and record the interview. Do not carry out the plan being discussed.
 1. Start: draft, widen perspectives, show the map, expand each axis, then decide each candidate. Read [Starting a Tree](references/starting-a-tree.md) in full whenever you create a new tree.
 2. Interview: the turn loop and the tree document below.
 3. Split and graph: Read [Splitting and Graph View](references/splitting-and-graph.md) in full when a split signal appears or the user asks to see the tree as a graph.
-4. Consolidation and after: see Finishing. Read [Changes After Consolidation](references/after-consolidation.md) in full when a decision that already has a design document changes.
+4. Finish: see Finishing.
 
 Read [Subagents](references/subagents.md) in full before you spawn an agent for the interview and when an agent's result arrives. Read a stage reference again each time you enter its stage; compaction can drop it.
 
@@ -101,7 +101,7 @@ Go through these steps in order. Korean labels and phrases in this skill are lit
 
 ### 7. Update the current state
 
-Overwrite the `현재 상태` block on every reply. It holds `작업 위치`, `최근 제시한 질문`, `지킬 조건`, `진행 약속`, `불러온 영역 스킬`, and `최종 정리 뒤 다시 엶(<date>)` after a reopening. Do not list open decisions or waiting questions there; statuses and `추천(<date>):` lines already hold them. Add dated lines to `세션 기록` at the bottom in time order.
+Overwrite the `현재 상태` block on every reply. It holds `작업 위치`, `최근 제시한 질문`, `지킬 조건`, `진행 약속`, and `불러온 영역 스킬`. Do not list open decisions or waiting questions there; statuses and `추천(<date>):` lines already hold them. Add dated lines to `세션 기록` at the bottom in time order.
 
 ### When the frame changes
 
@@ -251,5 +251,5 @@ These show the shape of a reply and of nodes, not their content.
 - When the user stops, keep the tree and stop asking.
 - When no answerable question remains, say whether blockers remain or the review is complete; do not invent questions to keep going.
 - A partial summary separates settled decisions from open and blocked ones.
-- Before the final stage, find live `모델의 해석(사용자 확인 전):` lines (search, or `map`) and ask each as a decision question, one per turn. Change a confirmed one to `사용자 확인(<date>):`; fix a wrong one and propagate it like a changed decision. An unconfirmed interpretation never enters the design document as a decision.
-- Begin the final stage as the base skill directs, only after every material question is resolved and the user explicitly confirms shared understanding. Leave the tree where it is for later reopening; the design document is what lasts. Do not propose a separate decision-record format beside the tree.
+- Before the interview ends, find live `모델의 해석(사용자 확인 전):` lines (search, or `map`) and ask each as a decision question, one per turn. Change a confirmed one to `사용자 확인(<date>):`; fix a wrong one and propagate it like a changed decision.
+- The interview ends as the base skill directs. Leave the tree where it is for later reopening. Do not propose a separate decision-record format beside the tree.

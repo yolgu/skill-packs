@@ -8,6 +8,7 @@ Claude Code와 Codex가 함께 쓰는 스킬, 전역 지침, 서브에이전트 
 common/skills/<스킬>/     두 하네스가 같이 쓰는 스킬
   SKILL.md                본문과 Claude Code 설정(머리말)
   agents/openai.yaml      Codex 설정(표시 이름, 자동 호출 여부)
+common/archive/<스킬>/    은퇴한 스킬의 보관본. 설치하지 않는다
 claude/
   CLAUDE.md               Claude Code 전역 지침
   agents/*.md             Claude Code 서브에이전트 정의

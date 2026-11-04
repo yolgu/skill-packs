@@ -9,8 +9,6 @@ Ask the questions one at a time, waiting for feedback on each question before co
 
 If a *fact* can be found by exploring the environment (filesystem, tools, etc.), look it up rather than asking me. The *decisions*, though, are mine — put each one to me and wait for my answer.
 
-The final consolidation skill exists at `../grilling-final-consolidation/SKILL.md`. Do not open, read, invoke, quote, or summarize that file while the interview is in progress.
-
-The final stage begins only after every material question has been resolved and I explicitly confirm that we have reached a shared understanding. At that point—and not before—read the file completely and follow it to produce the closing response.
+The interview ends when every material question has been resolved and I explicitly confirm that we have reached a shared understanding. Then it is simply over: write no summary, no document, and no next step.
 
 Do not act on the result.
