@@ -1,0 +1,4 @@
+interface:
+  display_name: "Concept Quiz"
+  short_description: "학습 자료로 5문제씩 묶어 다시 푸는 개념 5지선다 퀴즈를 만듭니다"
+  default_prompt: "Use $concept-quiz to write five-choice concept questions from this material and build a retryable HTML quiz in sets of five."

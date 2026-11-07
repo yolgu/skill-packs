@@ -1,0 +1,193 @@
+<h2 class="sr-only">__QUIZ_SUMMARY__</h2>
+<style>
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.qz{--q-fg:var(--text-primary,#1f1e1d);--q-fg2:var(--text-secondary,#5e5d59);--q-fg3:var(--text-muted,#8a8985);--q-s1:var(--surface-1,#f5f4ef);--q-s2:var(--surface-2,#ffffff);--q-b:var(--border,rgba(31,30,29,.15));--q-b2:var(--border-strong,rgba(31,30,29,.3));--q-okb:var(--bg-success,#eaf3de);--q-ok:var(--text-success,#3b6d11);--q-okl:var(--border-success,#97c459);--q-nob:var(--bg-danger,#fcebeb);--q-no:var(--text-danger,#a32d2d);--q-nol:var(--border-danger,#f09595);--q-acb:var(--bg-accent,#e6f1fb);--q-ac:var(--text-accent,#185fa5);--q-acl:var(--border-accent,#85b7eb);--q-r:var(--radius,8px);font-family:var(--font-sans,system-ui,-apple-system,sans-serif);font-size:15px;line-height:1.6;color:var(--q-fg);background:transparent}
+.qz [hidden]{display:none!important}
+.qz button{font:inherit}
+.qz-sets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.qz-set,.qz-ctl{padding:6px 12px;border:0.5px solid var(--q-b2);border-radius:var(--q-r);background:transparent;color:var(--q-fg);cursor:pointer}
+.qz-set[aria-pressed="true"],.qz-ctl[aria-pressed="true"]{background:var(--q-acb);color:var(--q-ac);border-color:var(--q-acl)}
+.qz-main{background:var(--q-acb);color:var(--q-ac);border-color:var(--q-acl)}
+.qz-card{border:0.5px solid var(--q-b);border-radius:12px;padding:16px;margin:0 0 12px;background:var(--q-s1)}
+.qz-tag{margin:0 0 4px;font-size:12px;color:var(--q-fg3)}
+.qz-q{margin:0 0 12px;font-weight:500}
+.qz-n{color:var(--q-fg3);margin-right:6px}
+.qz-opts{display:flex;flex-direction:column;gap:6px}
+.qz-opt{display:flex;gap:8px;text-align:left;padding:8px 12px;border:0.5px solid var(--q-b);border-radius:var(--q-r);background:var(--q-s2);color:var(--q-fg);cursor:pointer}
+.qz-opt:disabled{cursor:default}
+.qz-opt.ok{background:var(--q-okb);color:var(--q-ok);border-color:var(--q-okl)}
+.qz-opt.bad{background:var(--q-nob);color:var(--q-no);border-color:var(--q-nol)}
+.qz-exp{margin-top:12px;padding-top:12px;border-top:0.5px solid var(--q-b);color:var(--q-fg2)}
+.qz-exp p{margin:0 0 4px}
+.qz-src{color:var(--q-fg3);font-size:13px}
+.qz code{font-family:var(--font-mono,ui-monospace,Menlo,monospace);font-size:0.92em}
+.qz-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 0 4px;border-top:0.5px solid var(--q-b)}
+.qz-score{flex:1 1 240px;color:var(--q-fg2)}
+.qz-hide{display:none}
+</style>
+<div class="qz">
+<div class="qz-sets" id="qz-sets" role="group" aria-label="문제 묶음"></div>
+<div id="qz-list"></div>
+<div class="qz-bar">
+<span class="qz-score" id="qz-score" aria-live="polite"></span>
+<button type="button" class="qz-ctl" id="qz-filter" aria-pressed="false">틀린 문제만 보기</button>
+<button type="button" class="qz-ctl" id="qz-reset">이 묶음 다시 풀기</button>
+<button type="button" class="qz-ctl qz-main" id="qz-next">다음 묶음</button>
+</div>
+</div>
+<script>
+(() => {
+const MARKS = ["①","②","③","④","⑤"];
+const SET_SIZE = __QUIZ_SET_SIZE__;
+const SECTIONS = __QUIZ_SECTIONS__;
+const QUESTIONS = __QUIZ_QUESTIONS__;
+const SET_COUNT = Math.ceil(QUESTIONS.length / SET_SIZE);
+const root = document.getElementById("qz-list");
+const setsEl = document.getElementById("qz-sets");
+const scoreEl = document.getElementById("qz-score");
+const filterBtn = document.getElementById("qz-filter");
+const resetBtn = document.getElementById("qz-reset");
+const nextBtn = document.getElementById("qz-next");
+const chosen = new Map();
+let currentSet = 0;
+let wrongOnly = false;
+
+function appendRich(parent, text) {
+  text.split("`").forEach((part, index) => {
+    if (!part) return;
+    if (index % 2 === 1) {
+      const code = document.createElement("code");
+      code.textContent = part;
+      parent.appendChild(code);
+    } else {
+      parent.appendChild(document.createTextNode(part));
+    }
+  });
+  return parent;
+}
+
+function make(tag, className, text) {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  if (text !== undefined) appendRich(el, text);
+  return el;
+}
+
+function questionsOf(setIndex) {
+  return QUESTIONS.slice(setIndex * SET_SIZE, (setIndex + 1) * SET_SIZE);
+}
+
+function rangeLabel(setIndex) {
+  const items = questionsOf(setIndex);
+  return items[0].n + "–" + items[items.length - 1].n + "번";
+}
+
+function tally(setIndex) {
+  const items = questionsOf(setIndex);
+  const answered = items.filter((item) => chosen.has(item.n));
+  const correct = answered.filter((item) => chosen.get(item.n) === item.a);
+  return { correct: correct.length, answered: answered.length, total: items.length };
+}
+
+const setButtons = Array.from({ length: SET_COUNT }, (_, setIndex) => {
+  const button = make("button", "qz-set");
+  button.type = "button";
+  button.addEventListener("click", () => showSet(setIndex));
+  setsEl.appendChild(button);
+  return button;
+});
+setsEl.hidden = SET_COUNT < 2;
+nextBtn.hidden = SET_COUNT < 2;
+
+function updateScore() {
+  const current = tally(currentSet);
+  scoreEl.textContent = rangeLabel(currentSet) + " · 맞힌 문제 " + current.correct + " / 푼 문제 " + current.answered + " / " + current.total;
+  setButtons.forEach((button, setIndex) => {
+    const result = tally(setIndex);
+    button.setAttribute("aria-pressed", String(setIndex === currentSet));
+    button.textContent = rangeLabel(setIndex) + (result.answered ? " · " + result.correct + "/" + result.total : "");
+  });
+  resetBtn.textContent = "이 " + current.total + "문제 다시 풀기";
+  nextBtn.textContent = currentSet === SET_COUNT - 1 ? "처음 묶음으로" : "다음 " + tally(currentSet + 1).total + "문제";
+}
+
+function isWrong(item) {
+  return chosen.has(item.n) && chosen.get(item.n) !== item.a;
+}
+
+function applyFilter() {
+  filterBtn.setAttribute("aria-pressed", String(wrongOnly));
+  root.querySelectorAll(".qz-card").forEach((card) => {
+    card.classList.toggle("qz-hide", wrongOnly && !isWrong(QUESTIONS[Number(card.dataset.n) - 1]));
+  });
+}
+
+function reveal(card, item, choice) {
+  card.querySelectorAll(".qz-opt").forEach((button, index) => {
+    button.disabled = true;
+    if (index === item.a) button.classList.add("ok");
+    else if (index === choice) button.classList.add("bad");
+  });
+  const verdict = choice === item.a ? "정답입니다. " : "오답입니다. 정답은 " + MARKS[item.a] + "입니다. ";
+  const exp = make("div", "qz-exp");
+  exp.appendChild(appendRich(make("p", "", verdict), item.e));
+  exp.appendChild(make("p", "qz-src", "근거: " + item.l));
+  exp.appendChild(make("p", "qz-src", "“" + item.t + "”"));
+  card.appendChild(exp);
+}
+
+function choose(card, item, choice) {
+  if (chosen.has(item.n)) return;
+  chosen.set(item.n, choice);
+  reveal(card, item, choice);
+  updateScore();
+  applyFilter();
+}
+
+function buildCard(item) {
+  const card = make("div", "qz-card");
+  card.dataset.n = String(item.n);
+  card.appendChild(make("p", "qz-tag", SECTIONS[item.s]));
+  const question = make("p", "qz-q");
+  question.appendChild(make("span", "qz-n", item.n + "."));
+  appendRich(question, item.q);
+  card.appendChild(question);
+  const options = make("div", "qz-opts");
+  item.o.forEach((text, index) => {
+    const button = make("button", "qz-opt");
+    button.type = "button";
+    button.appendChild(make("span", "", MARKS[index]));
+    button.appendChild(make("span", "", text));
+    button.addEventListener("click", () => choose(card, item, index));
+    options.appendChild(button);
+  });
+  card.appendChild(options);
+  if (chosen.has(item.n)) reveal(card, item, chosen.get(item.n));
+  return card;
+}
+
+function render() {
+  root.replaceChildren(...questionsOf(currentSet).map(buildCard));
+  updateScore();
+  applyFilter();
+}
+
+function showSet(setIndex) {
+  currentSet = setIndex;
+  wrongOnly = false;
+  render();
+  root.scrollIntoView({ block: "start" });
+}
+
+resetBtn.addEventListener("click", () => {
+  questionsOf(currentSet).forEach((item) => chosen.delete(item.n));
+  showSet(currentSet);
+});
+nextBtn.addEventListener("click", () => showSet((currentSet + 1) % SET_COUNT));
+filterBtn.addEventListener("click", () => {
+  wrongOnly = !wrongOnly;
+  applyFilter();
+});
+render();
+})();
+</script>
