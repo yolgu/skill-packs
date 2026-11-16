@@ -11,7 +11,7 @@ Apply this policy before every subagent spawn and throughout the complete delega
 
 - Codex: use the native multi-agent tools; no mapping needed.
 - Claude Code:
-  - Spawn: the `Agent` tool. The custom roles are `subagent_type: "reviewer"` and `subagent_type: "blocker-investigator"`; their definitions already request `max` effort.
+  - Spawn: the `Agent` tool. The custom roles are `subagent_type: "reviewer"` and `subagent_type: "blocker-investigator"`; their definitions already request `high` effort.
   - Context fork: `true` means `subagent_type: "fork"`, which inherits the conversation. `false` means any other type, which starts from the delegation prompt alone.
   - Status request and resume: `SendMessage` to the agent's ID or name.
   - Close: a foreground agent is finished once it returns. Stop a background agent that is still running with `TaskStop`.
@@ -125,7 +125,7 @@ When `requires_review: true`:
 8. Capture the result, confirm expected artifacts and no product-source edits, and close the reviewer.
 9. Apply only evidence-backed findings and verify the fix in the parent.
 
-Request `max` reasoning with an available supporting model without pinning a long-lived model name in this skill. If no available model supports `max`, use the highest supported effort. Have the parent disclose that fallback separately from the reviewer's exact finding output. If the custom role cannot run with the available model and effort, use a generic isolated subagent with the reviewer role prompt and the highest supported effort.
+Request `high` reasoning with an available supporting model without pinning a long-lived model name in this skill. Do not raise it to `max` or `xhigh`: the user found those too slow. If no available model supports `high`, use the highest supported effort below it. Have the parent disclose that fallback separately from the reviewer's exact finding output. If the custom role cannot run with the available model and effort, use a generic isolated subagent with the reviewer role prompt and `high` effort, or the highest supported effort below it.
 
 Run at most one re-review, only after correcting a high-impact security, data-loss, concurrency, or public-compatibility finding. Verify lower-risk corrections locally.
 
@@ -152,7 +152,7 @@ Keep non-critical blockers documented while the parent advances other work. Do n
 
 Do not call `blocker-investigator` automatically for every diagnosable blocker. Use it at most once when a bounded independent investigation has a material chance to unblock required work or materially improve the parent's next decision beyond its coordination cost. For an unresolved technically diagnosable blocker on the required path, run that one investigation before requesting user action unless the parent already has enough evidence to solve it directly. Give the investigator both the original subject report path and a unique investigator-self blocker path. Require it to update and return the subject report during normal investigation, and to use its unique path only if a distinct blocker prevents the investigation itself. Use investigation for evidence-based diagnosis of code defects, test failures, tool behavior, configuration, dependency conflicts, or state differences. Do not use it for product decisions, credentials, approvals, external-service recovery, or a known external action.
 
-Request `max` reasoning with an available supporting model. If unavailable, use the highest supported effort and have the parent disclose the fallback separately. If the custom role cannot run, apply the generic investigator prompt in `references/blocker-report.md` to an isolated subagent. Require the investigator to update the existing report, avoid product-source changes, return a concise conclusion and path, and close after artifact transfer.
+Request `high` reasoning with an available supporting model, not `max` or `xhigh`. If unavailable, use the highest supported effort below it and have the parent disclose the fallback separately. If the custom role cannot run, apply the generic investigator prompt in `references/blocker-report.md` to an isolated subagent. Require the investigator to update the existing report, avoid product-source changes, return a concise conclusion and path, and close after artifact transfer.
 
 Preserve reports after resolution. Set `resolved` only after a responsible worker or the parent applies and verifies a fix. Do not automatically commit reports, add them to ignore files, delete them, or delete empty blocker session directories.
 

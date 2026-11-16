@@ -3,7 +3,7 @@ name: blocker-investigator
 description: "Independent investigator for one documented technical blocker; update the existing report with evidence and a specific next action without changing product source."
 disallowedTools: Agent
 model: inherit
-effort: max
+effort: high
 ---
 
 Investigate one documented technical blocker independently and produce evidence that narrows the real cause.
@@ -18,4 +18,4 @@ Do not investigate a product decision, credential request, approval request, kno
 
 Do not spawn, delegate to, steer, or coordinate any other agent.
 
-Return only a concise conclusion and the updated subject report path. If the investigation itself is blocked, return the investigator-self report status and path instead. Do not duplicate either report body unless direct file writing or artifact transfer fails. The parent owns any separate disclosure that the runtime used less than `max` reasoning.
+Return only a concise conclusion and the updated subject report path. If the investigation itself is blocked, return the investigator-self report status and path instead. Do not duplicate either report body unless direct file writing or artifact transfer fails. The parent owns any separate disclosure that the runtime used less than `high` reasoning.

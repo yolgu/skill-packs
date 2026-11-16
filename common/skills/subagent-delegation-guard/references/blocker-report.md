@@ -135,7 +135,7 @@ Do not repeat investigation for the same blocker. Treat new evidence as a separa
 
 ## Select the Investigator Runtime
 
-Prefer the custom `blocker-investigator` role with isolated context and `max` reasoning on an available supporting model. Give it the subject blocker report path and a unique investigator-self blocker path. If `max` is unavailable, use the highest supported effort and disclose the fallback. If the custom role cannot run, give the Generic Investigator Instructions below to a generic isolated subagent.
+Prefer the custom `blocker-investigator` role with isolated context and `high` reasoning on an available supporting model. Give it the subject blocker report path and a unique investigator-self blocker path. If `high` is unavailable, use the highest supported effort below it and disclose the fallback. If the custom role cannot run, give the Generic Investigator Instructions below to a generic isolated subagent.
 
 ## Generic Investigator Instructions
 
