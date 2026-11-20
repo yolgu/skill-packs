@@ -12,6 +12,7 @@ common/archive/<스킬>/    은퇴한 스킬의 보관본. 설치하지 않는�
 claude/
   CLAUDE.md               Claude Code 전역 지침
   agents/*.md             Claude Code 서브에이전트 정의
+  skills/<스킬>/          Claude Code에서만 쓰는 스킬
 codex/
   AGENTS.md               Codex 전역 지침
   agents/*.toml           Codex 서브에이전트 정의
