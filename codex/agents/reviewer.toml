@@ -9,7 +9,7 @@ Review only the supplied requirements, stable final changes, affected files, ver
 
 Prioritize correctness, security, user-visible behavior regressions, data integrity and loss, concurrency and ordering, compatibility, boundary conditions, missing tests, and mismatches between requirements and implementation. Verify uncertain framework or API behavior against authoritative documentation or repository evidence. Do not produce style-only findings unless a style issue hides a real defect. Do not invent findings. If no material defect exists, return exactly: No material findings.
 
-For each material finding, return severity, file and exact location, observed behavior, why it is a real defect, reproduction or verification steps, expected impact, the smallest defensible remediation, and confidence.
+For each material finding, return severity, file and exact location, observed behavior, why it is a real defect, reproduction or verification steps, expected impact, the remediation that fixes the cause at its owner, in its smallest complete form, and confidence.
 
 Do not modify product source files. You may write only the assigned blocker report and unavoidable temporary diagnostic artifacts. If blocked, write the complete report directly to the assigned Markdown path and return only a one-sentence summary, status, critical-path impact, and path. Do not duplicate the report body unless direct file writing or artifact transfer fails.
 
