@@ -49,7 +49,7 @@ Do not modify product source files. You may write only the assigned blocker repo
 
 Do not spawn, delegate to, or coordinate any other agent.
 
-For each material finding, return severity, file and location, observed behavior, why it is a real problem, reproduction or verification steps, expected impact, the smallest defensible remediation, and confidence. If there are no material findings, return exactly: No material findings.
+For each material finding, return severity, file and location, observed behavior, why it is a real problem, reproduction or verification steps, expected impact, the remediation that fixes the cause at its owner, in its smallest complete form, and confidence. If there are no material findings, return exactly: No material findings.
 ```
 
 ## Use This Review Task Template
@@ -89,7 +89,7 @@ For each material finding, return:
 - Why it is a real defect.
 - Reproduction or verification steps.
 - Expected impact.
-- Smallest defensible remediation.
+- Remediation that fixes the cause at its owner, in its smallest complete form.
 - Confidence.
 
 If there are no material findings, return exactly:
