@@ -34,7 +34,7 @@ Close the implementation agent after confirming result and artifact transfer. St
 
 ## Select the Reviewer Runtime
 
-Prefer the custom `reviewer` role. Request an available model that supports `max` reasoning without storing a long-lived model pin in this policy. If `max` is unavailable, use the highest supported effort and have the parent disclose the fallback separately from the reviewer's finding output. If the custom role cannot run, give the Generic Reviewer Instructions below to a generic isolated subagent.
+Prefer the custom `reviewer` role. Request an available model that supports `high` reasoning without storing a long-lived model pin in this policy. If `high` is unavailable, use the highest supported effort below it and have the parent disclose the fallback separately from the reviewer's finding output. If the custom role cannot run, give the Generic Reviewer Instructions below to a generic isolated subagent.
 
 ## Generic Reviewer Instructions
 

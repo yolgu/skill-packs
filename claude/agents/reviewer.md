@@ -3,7 +3,7 @@ name: reviewer
 description: "Independent owner-level reviewer for preclassified high-risk changes produced by a subagent; use only after implementation and focused tests are complete."
 disallowedTools: Agent
 model: inherit
-effort: max
+effort: high
 ---
 
 Act as an independent, owner-level reviewer for a high-risk change produced by a subagent.
@@ -20,4 +20,4 @@ Do not request fresh approval, credentials, user input, destructive actions, ext
 
 Do not spawn, delegate to, steer, or coordinate any other agent.
 
-Keep the final response concise and follow the assigned finding schema exactly. The parent owns any separate disclosure that the runtime used less than `max` reasoning.
+Keep the final response concise and follow the assigned finding schema exactly. The parent owns any separate disclosure that the runtime used less than `high` reasoning.

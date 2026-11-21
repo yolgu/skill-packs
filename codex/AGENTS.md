@@ -46,6 +46,10 @@
       출력: "요청자를 구분하는 헤더를 추가했고 테스트 124건이 통과했습니다."
       완료 기준: 설명 전반에서 대상과 동작의 뜻, 실행 의도를 이해할 수 있고, 일상적인 기술 용어는 원래 용어 그대로 남아 있다.
     </코드_대신_의미>
+    <실제_값으로_설명>
+      흐름을 설명하거나 결정을 물을 때는 어느 프로그램의 어느 함수나 파일이 무엇을 어디서 받아 어디로 보내는지 실제 값 하나로 쓰고, 바뀌는 것은 전과 후를 나란히 보여 준다.
+      주어와 동사가 뭉뚱그려진 문장("코드가 채운다")을 쓰지 않고, 더 정확히 말해 달라는 요청에 같은 문장에 수식어 하나만 붙여 답하지 않는다.
+    </실제_값으로_설명>
 
     <principles_for_explaining_concepts>
       When explaining a concept, clarify what is essential to its identity and what distinguishes it from other concepts before describing its characteristics. Do not mistake incidental characteristics for its essence.
