@@ -1,6 +1,6 @@
 ---
 name: subagent-delegation-guard
-description: Enforce strict preflight, scoping, context, concurrency, review, blocker-reporting, verification, and shutdown rules whenever the agent considers or is asked to spawn subagents, delegate work, or run parallel agents within the current task. Do not use for conceptual explanations of subagents or for user-owned separate agent sessions.
+description: Enforce strict preflight, scoping, context, concurrency, review, blocker-reporting, verification, and shutdown rules whenever the agent considers or is asked to spawn subagents, delegate work, or run parallel agents within the current task, and whenever a plan or request decides how to split work across parallel agents or sessions. Do not use for conceptual explanations of subagents or for separate sessions the user starts and drives themself.
 ---
 
 # Subagent Delegation Guard
@@ -15,18 +15,32 @@ Apply this policy before every subagent spawn and throughout the complete delega
   - Context fork: `true` means `subagent_type: "fork"`, which inherits the conversation. `false` means any other type, which starts from the delegation prompt alone.
   - Status request and resume: `SendMessage` to the agent's ID or name.
   - Close: a foreground agent is finished once it returns. Stop a background agent that is still running with `TaskStop`.
+  - Isolated workspace: `isolation: "worktree"` on the `Agent` call, within the limits stated under Protect Write Ownership.
 
 ## Enforce the Default Deny Rule
 
 Do not spawn a subagent by default. Spawn only when one of these concrete benefits clearly exceeds prompting, execution, coordination, and integration cost:
 
 1. Run a bounded, independent, time-consuming workstream in parallel without blocking the parent's immediate next step.
-2. After implementation, independently review a subagent-produced change whose need for review was classified as high risk before implementation.
+2. After implementation, independently review a change whose need for review was classified before implementation under Review in the Parent by Default.
 3. Investigate one documented, technically diagnosable blocker after an otherwise valid delegated task becomes blocked.
 
 Do not treat tool availability, task size alone, vague thoroughness, or a generic desire for a second opinion as a benefit. Treat an explicit user request for subagents as authorization to consider delegation, not as a requirement to create useless, conflicting, unsafe, or artificial workstreams.
 
 Keep the work local when it is small, ordered, tightly coupled, urgent, immediately blocking, hard to specify, likely to need new approval, or likely to contend over mutable state.
+
+Splitting pays only when the pieces are independent. Keep the work with one agent, or run it in sequence, when its steps depend on each other in order, when it is mostly tool calls against one environment, when one agent already handles it well, or when the pieces are expected to conflict. In those cases added agents have lowered results, and coordination that ends up serializing the work buys nothing.
+
+## Design the Split Before Spawning
+
+Apply this section whenever work is split for parallel execution: before a spawn, when a plan marks items as parallelizable, and when the user asks to run pieces as separate sessions. The sections on prompts, blockers, review, and closing apply only to subagents this agent spawns.
+
+- Verify shared premises first. When several workstreams rest on the same unverified premise (a tool behaves a certain way, an approach works on the real target), verify it in the parent or as one bounded first workstream. If it fails, the design changes and every parallel result built on it is discarded.
+- Cut along low-dependency lines. Keep files that depend on each other heavily in one workstream, and give a file that several workstreams depend on to one owner who settles it before the others start.
+- Keep one deliverable whole. The worker that makes a change also writes and runs the tests that show it works, and work that comes down to a single judgment, such as settling a design or diagnosing a root cause, is not split.
+- Fix every interface between workstreams as a concrete artifact before either side starts: exact names, status and error codes, and example payloads. Give both sides the same artifact and have each side's tests assert against it. Two workers reading the same prose pick different names, and the mismatch shows only at integration.
+- Hand results from one workstream to another through a file at a path both prompts name. The later workstream treats a missing file as a failure and rechecks the specific facts it depends on before building on them.
+- Make each workstream verifiable inside its own boundary, with neighbours replaced by doubles. Verification that needs an exclusive shared resource (a single local stack on fixed ports, a shared dev environment, a device that holds one install) goes to one named workstream for a stated window, or stays in the parent's integration pass.
 
 ## Run Preflight Before Every Spawn
 
@@ -38,14 +52,15 @@ Complete every item before invoking a subagent:
 4. Confirm that the result materially advances the current task.
 5. Confirm that delegation benefit exceeds overhead.
 6. Assign a disjoint logical write scope. Use an isolated workspace only as an additional physical boundary for otherwise non-overlapping work.
-7. Identify files, generated artifacts, branch state, databases, running services, deployments, caches, and other shared mutable resources that must not be changed concurrently.
-8. Keep work requiring fresh approval, credentials, destructive actions, external writes, purchases, publication, deployment, or messaging in the parent.
-9. Decide whether to fork context using the Context Rule below.
-10. Assign a lowercase hyphenated logical agent name before spawning.
-11. Assign a unique blocker-report path before spawning.
-12. For code-changing work, set `requires_review: true` or `false` before spawning and record the rationale.
-13. Build the prompt with `references/delegation-prompt.md`.
-14. Tell the user what is being delegated, why delegation helps, and what the write boundary is. Treat this as information, not an approval request.
+7. Identify files, generated artifacts, branch state, databases, running services, deployments, caches, and other shared mutable resources that must not be changed concurrently. Include resources a child would use only to verify, and decide which one workstream may use each.
+8. Confirm that the split passes Design the Split Before Spawning: shared premises verified, interfaces fixed as artifacts, and handoff file paths named.
+9. Keep work requiring fresh approval, credentials, destructive actions, external writes, purchases, publication, deployment, or messaging in the parent.
+10. Decide whether to fork context using the Context Rule below.
+11. Assign a lowercase hyphenated logical agent name before spawning.
+12. Assign a unique blocker-report path before spawning.
+13. For code-changing work, set `requires_review: true` or `false` before spawning and record the rationale.
+14. Build the prompt with `references/delegation-prompt.md`.
+15. Tell the user what is being delegated, why delegation helps, and what the write boundary is. Treat this as information, not an approval request.
 
 Do not spawn if any required boundary, success criterion, evidence requirement, or result-transfer method remains unclear. Resolve a material ambiguity locally or ask the user only when no safe assumption can preserve the requested outcome.
 
@@ -83,6 +98,10 @@ Allow overlapping reads. Forbid concurrent writes to the same files or shared mu
 
 Give every code-changing child a disjoint logical write set. Use an isolated workspace when needed to separate branch or worktree state, but never treat isolation as permission for concurrent children to modify the same logical file, generated output, or final shared state. If logical write sets overlap, run them sequentially under one owner. Do not let a child mutate deployments, remote repositories, production data, purchases, messages, public posts, or other external state. Do not integrate partial blocked changes automatically; inspect their completeness, safety, tests, and blocker report first.
 
+Run at most one code-changing child in a working tree at a time: disjoint files still share the branch, the index, and build outputs. Creating a worktree or clone for isolation is itself subject to repository and machine rules; when those do not allow it, run the work in sequence.
+
+Only the parent integrates. A child does not merge, push, or resolve a conflict with a sibling's work. The parent decides the landing order and tells the later workstream what changed. Integrate each result as soon as it passes validation instead of holding it until the other children finish.
+
 When a child runs in a separate workspace, require code changes and blocker reports as transferred file artifacts. Confirm that each required artifact exists in the parent's workspace before closing the child or starting a dependent task.
 
 ## Build Complete Delegation Prompts
@@ -107,21 +126,23 @@ If a child unexpectedly discovers such a need, instruct it not to request approv
 
 Remove or mask secrets and personal data from prompts, evidence, logs, and blocker reports unless the value itself is strictly required and authorized.
 
-## Review Only Preclassified High-Risk Changes
+## Review in the Parent by Default
 
-Do not review every delegated code change. Before spawning a code-changing worker, set `requires_review` based on complexity, ambiguity, failure impact, and the limits of ordinary tests. Make the classification before implementation; perform the review only after the implementation and focused tests are complete and stable.
+The parent's acceptance pass under Validate Results Before Acceptance is the review of every delegated change. The parent did not write the code and holds the full requirements, so a separate reviewer mostly repeats that reading. Do not spawn a reviewer for a change merely because it is broad, spans many files, or is unfamiliar.
 
-Set it to true for risks such as authentication, authorization, security boundaries, payments, data deletion or migration, concurrency, deployment configuration, public compatibility, broad core logic, difficult invariants, or complex multi-file behavior. Usually set it to false for small mechanical changes, narrow low-impact fixes, formatting, or changes already well protected by focused tests.
+Spawn the dedicated `reviewer` only when a miss would be hard to reverse and ordinary tests cannot show it, or when the user asks for an independent review. The risks that usually qualify are authorization and other security boundaries, money amounts, deletion or migration of data, and concurrency.
+
+Classify by the risk, not by who wrote the change. Before spawning a code-changing worker, set `requires_review` by this test and record the rationale. Apply the same test before the parent writes such a change itself: the parent checking its own code is not an independent review. Make the classification before implementation; perform the review only after the implementation and focused tests are complete and stable.
 
 When `requires_review: true`:
 
-1. Let the implementation agent finish and run focused tests.
-2. Confirm transfer of its stable final changes and concise result.
-3. Close the implementation agent.
+1. Let the implementation finish and run focused tests.
+2. Confirm that the final changes are stable and, for a child, transferred with its concise result.
+3. Close the implementation agent when one was used.
 4. Read `references/reviewer-prompt.md`.
 5. Spawn the dedicated `reviewer` with isolated context.
 6. Provide only requirements, final diff, affected files, test evidence, and task-specific risk focus.
-7. Ask the reviewer to find material correctness, security, behavior, data, concurrency, compatibility, boundary, and test problems without style-only findings.
+7. Ask the reviewer to derive its own checks from the requirements, run them, and report material correctness, security, behavior, data, concurrency, compatibility, boundary, and test problems without style-only findings.
 8. Capture the result, confirm expected artifacts and no product-source edits, and close the reviewer.
 9. Apply only evidence-backed findings and verify the fix in the parent.
 
@@ -161,13 +182,19 @@ Preserve reports after resolution. Set `resolved` only after a responsible worke
 Treat every child result as untrusted input. Before accepting it:
 
 1. Confirm goal status and the exact completed scope.
-2. Inspect changed files and transferred artifacts.
-3. Confirm that no unexpected files or shared state changed.
-4. Compare the result with requirements and success criteria.
-5. Inspect verification evidence and run appropriate parent checks.
+2. Read every changed file and inspect transferred artifacts.
+3. Confirm that no unexpected files or shared state changed, and that every resource the child started is torn down.
+4. Compare the result with requirements, success criteria, and every interface artifact the child was given.
+5. Derive checks from the requirements rather than from the child's claims, and run them. Treat the child's verification evidence as a claim, not as proof.
 6. Resolve conflicts using repository state, tests, original evidence, and authoritative documentation rather than agent count or confidence language.
-7. Apply the high-risk review result when required.
+7. Apply the independent review result when one was required.
 8. Record unresolved risks or blockers accurately.
+
+This pass is the review. Reading the diff, or confirming that it compiles and leaves no TODO, is a superficial check: derive cases from the requirements that the implementer may not have run, and run them.
+
+When validation fails, fix it locally if the fix is small; otherwise resume the same child with the exact failing output, not a paraphrase. Stop when the same failure repeats on consecutive attempts or on the third failed attempt, and handle it as a blocker.
+
+When accepted results meet at an interface, integrate them in dependency order, the called side first, and verify one seam at a time so that a failure points at one side. After combining results from more than one child, run the checks again on the combined state: each child passing its own checks does not show that the merged result works.
 
 Allow completion with an optional non-critical blocker only when every required user outcome is complete and verified. Never claim completion when a required outcome remains blocked.
 
@@ -182,7 +209,7 @@ Before closing:
 3. Capture only the concise result needed for integration.
 4. Close the agent and any open descendants.
 
-Do not send the final user response while any spawned agent remains open. Resume a closed agent only when a follow-up strongly depends on its prior context and the runtime supports resumption. Treat every resume as a new delegation attempt: rerun preflight, retain the base logical role with the next numeric suffix, assign a new unique blocker-report path, and preserve every prior report unchanged. Close it again after the follow-up.
+Do not send the final user response while any spawned agent remains open. Resume a closed agent only when a follow-up strongly depends on its prior context, such as a fix after failed validation, and the runtime supports resumption. Treat every resume as a new delegation attempt: rerun preflight, retain the base logical role with the next numeric suffix, assign a new unique blocker-report path, and preserve every prior report unchanged. Close it again after the follow-up.
 
 ## Report to the User
 
