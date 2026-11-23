@@ -1,21 +1,17 @@
 # Independent High-Risk Review Contract
 
-Use this reference only for a subagent-produced code change marked `requires_review: true` before implementation. Do not use it for every delegated change or for changes authored by the parent under unrelated review policy.
+Use this reference only for a code change marked `requires_review: true` before implementation, whether a subagent or the parent wrote it. Do not use it for every delegated change: the parent's acceptance pass is the default review.
 
 ## Qualify the Review
 
-Review when independent scrutiny materially reduces risk from:
+Spawn the reviewer only when a miss would be hard to reverse and ordinary tests cannot show it, or when the user asks for an independent review. The risks that usually qualify are:
 
-- Authentication, authorization, or another security boundary.
+- Authorization or another security boundary.
 - Payments, balances, billing, or amount calculations.
 - Deletion, transformation, migration, or integrity of data.
 - Concurrency, ordering, retries, or race conditions.
-- Deployment or production configuration.
-- Public API, persistent format, or compatibility behavior.
-- Broad core behavior or difficult invariants.
-- Complex, ambiguous, multi-file requirements with high failure impact.
 
-Usually skip review for narrow mechanical edits, file movement, formatting, low-impact changes, and focused fixes already well protected by tests.
+Classify by the risk, not by who wrote the change. Skip the reviewer for the rest, including broad, multi-file, or public-interface changes that tests the parent can run already cover; the parent's acceptance pass reviews those.
 
 ## Preserve Independence
 
@@ -30,7 +26,7 @@ Use isolated context. Do not fork the implementation conversation. Provide only:
 
 Do not provide the implementation agent's hidden reasoning, abandoned hypotheses, self-review, or confidence claims.
 
-Close the implementation agent after confirming result and artifact transfer. Start review only after the change is stable. Do not run implementation and review concurrently.
+Close the implementation agent, when one was used, after confirming result and artifact transfer. Start review only after the change is stable. Do not run implementation and review concurrently.
 
 ## Select the Reviewer Runtime
 
@@ -39,11 +35,11 @@ Prefer the custom `reviewer` role. Request an available model that supports `hig
 ## Generic Reviewer Instructions
 
 ```text
-Act as an independent, owner-level reviewer for high-risk changes produced by a subagent.
+Act as an independent, owner-level reviewer for a high-risk change.
 
 Prioritize correctness, security, behavior regressions, data integrity, concurrency, compatibility, boundary conditions, and missing tests. Do not produce style-only findings unless a style issue hides a real defect.
 
-Review only the supplied requirements, final changes, affected files, and verification evidence. Do not assume the implementation agent's reasoning was correct. Verify uncertain framework or API behavior against authoritative documentation or repository evidence.
+Review only the supplied requirements, final changes, affected files, and verification evidence. Do not assume the implementer's reasoning was correct. Derive your own checks from the requirements and run them against the change; treat the supplied verification evidence as a claim, not as proof. Verify uncertain framework or API behavior against authoritative documentation or repository evidence.
 
 Do not modify product source files. You may write only the assigned blocker report and unavoidable temporary diagnostic artifacts. Do not request new approval, credentials, or user input. If blocked, follow the blocker protocol exactly.
 
@@ -79,7 +75,7 @@ For each material finding, return severity, file and location, observed behavior
 7. Missing or insufficient tests.
 8. Mismatch between requirements and implementation.
 
-Do not repeat tests mechanically. Inspect risks that the completed tests may not expose. Verify uncertain API or framework claims using authoritative documentation or repository evidence.
+Derive your own checks from the requirements and run them against the change, without modifying product source. Do not only rerun the supplied tests: target the risks they may not expose. Verify uncertain API or framework claims using authoritative documentation or repository evidence.
 
 ## Finding Schema
 For each material finding, return:

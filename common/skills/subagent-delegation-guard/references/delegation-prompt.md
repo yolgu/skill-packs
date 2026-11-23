@@ -11,12 +11,12 @@ Do not spawn until all items are concrete:
 3. Concrete reason delegation is beneficial.
 4. Included work.
 5. Explicitly excluded work.
-6. Minimum required inputs and context.
+6. Minimum required inputs and context, including every interface artifact shared with another workstream and every handoff file path.
 7. Context-fork decision and inherited assumptions.
 8. Read scope.
 9. Exact write boundary or no-write rule.
-10. Success criteria observable by the parent.
-11. Required evidence and verification.
+10. Success criteria observable by the parent, each written as the literal check to run and the result it must produce.
+11. Required evidence and verification, runnable inside the child's own boundary without a shared resource it was not assigned.
 12. Normal completion result schema.
 13. `requires_review` value and risk rationale.
 14. Unique blocker-report path.
@@ -57,9 +57,9 @@ For a resumed agent, treat the resumed turn as a new delegation attempt. Rerun p
 
 ## Classify Review Before Code Changes
 
-Set `requires_review: true` before spawn when complexity, ambiguity, or failure impact makes independent review materially useful. Typical triggers include authentication, authorization, security boundaries, payments, destructive data changes, migrations, concurrency, deployment configuration, public interfaces, compatibility, broad core logic, hard-to-test invariants, or complex multi-file behavior.
+The parent's acceptance pass reviews every delegated change, so `requires_review: false` is the default. Set `requires_review: true` before spawn only when a miss would be hard to reverse and ordinary tests cannot show it, or when the user asks for an independent review. The risks that usually qualify are authorization and other security boundaries, money amounts, deletion or migration of data, and concurrency. Classify by the risk, not by who writes the change.
 
-Usually set `requires_review: false` for narrow mechanical work, formatting, low-impact fixes, or changes with strong focused tests. Do not add review after completion merely because the result feels unfamiliar.
+Set `requires_review: false` for the rest, including changes that are broad, span many files, or touch public interfaces but are covered by tests the parent can run. Do not add review after completion merely because the result feels unfamiliar.
 
 For read-only or otherwise non-code work, set `requires_review: false` with the rationale `no code changes` so every prompt has an explicit value without implying a code review.
 
@@ -88,13 +88,19 @@ For read-only or otherwise non-code work, set `requires_review: false` with the 
 ## Inputs and Context
 {{minimum_required_context_and_confirmed_assumptions}}
 
+## Interfaces With Other Workstreams
+- Interface artifacts your work and its tests must match exactly: {{interface_artifact_paths_or_none}}
+- Handoff files you read, each treated as a failure when missing, with the facts to recheck before building on them: {{handoff_inputs_or_none}}
+- Handoff files you write: {{handoff_outputs_or_none}}
+
 ## Ownership Boundaries
 - Read scope: {{read_scope}}
 - Write scope: {{disjoint_write_scope_or_none}}
-- Shared mutable resources you must not change: {{shared_state_exclusions}}
+- Shared mutable resources you must not change, start, or use: {{shared_state_exclusions}}
+- Shared resources assigned to you for verification, and for how long: {{assigned_shared_resources_or_none}}
 
 ## Success Criteria
-{{observable_success_criteria}}
+{{literal_checks_and_expected_results}}
 
 ## Required Verification
 {{commands_checks_or_evidence}}
@@ -113,6 +119,7 @@ Return only:
 4. Verification performed and its result.
 5. Residual risks or follow-up work.
 6. What the parent must verify.
+7. Every process, container, port, or temporary resource you started, and whether each is torn down.
 
 Do not return raw logs, long exploration notes, hidden reasoning, abandoned hypotheses, or self-assessment.
 
@@ -143,14 +150,15 @@ Stop and follow the blocker protocol when:
 - Verification reveals a failure that cannot be safely resolved within scope.
 
 ## Delegation Boundary
-Do not spawn, delegate to, steer, or coordinate any other agent.
+Do not spawn, delegate to, steer, or coordinate any other agent. Do not merge, push, or resolve a conflict with another workstream's changes; the parent integrates.
 ```
 
 ## Check Before Sending
 
 - Confirm that the reason describes actual time or quality benefit rather than generic thoroughness.
 - Confirm that the parent's immediate next step does not depend on this result.
-- Confirm that another active worker does not own the same mutable state.
+- Confirm that another active worker does not own the same mutable state, including a resource used only for verification.
+- Confirm that every interface with another workstream is a concrete artifact given to both sides, not a prose description.
 - Confirm that an isolated workspace does not hide overlapping logical ownership of the same file, generated output, or final shared state.
 - Confirm that paths are resolvable from the child's workspace.
 - Confirm that a separate workspace can return file artifacts when required.
